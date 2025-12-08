@@ -1,3 +1,15 @@
+// app/dashboard/page.tsx
+"use client";
+
+import { useEffect, useState } from "react";
+import api from "@/lib/api";
+
+type User = {
+  id: number;
+  name: string;
+  email: string;
+};
+
 type Task = {
   id: number;
   title: string;
@@ -11,17 +23,79 @@ const mockTasks: Task[] = [
 ];
 
 export default function DashboardPage() {
+  const [user, setUser] = useState<User | null>(null);
+  const [status, setStatus] = useState<"loading" | "ok" | "unauth" | "error">(
+    "loading"
+  );
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await api.get<User>("/api/user");
+        setUser(res.data);
+        setStatus("ok");
+        console.log("ログイン中ユーザー:", res.data);
+      } catch (error: any) {
+        const statusCode = error?.response?.status;
+        console.log("api/user エラー:", statusCode, error?.response?.data);
+
+        if (statusCode === 401) {
+          setStatus("unauth");
+        } else {
+          setStatus("error");
+        }
+      }
+    };
+
+    fetchUser();
+  }, []);
+
   return (
     <main className="min-h-screen bg-slate-950 text-slate-50 p-6">
       <div className="max-w-3xl mx-auto space-y-4">
-        <header className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">今日の課題</h1>
-          <span className="text-xs text-slate-400">
-            ※ 今はモックデータ（あとでAPIにつなぐ）
-          </span>
+        {/* ヘッダー */}
+        <header className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs text-slate-400 mb-1">
+              課題練習アプリ（仮）
+            </p>
+            <h1 className="text-2xl font-bold">今日の課題</h1>
+            <p className="text-xs text-slate-400 mt-1">
+              ※ 今はモックデータ（あとでAPIにつなぐ）
+            </p>
+          </div>
+
+          {/* こんにちは！◯◯さん */}
+          <div className="text-right text-sm">
+            {status === "loading" && (
+              <p className="text-slate-400 text-xs">ユーザー確認中...</p>
+            )}
+
+            {status === "ok" && user && (
+              <>
+                <p className="text-xs text-slate-400">ログイン中のユーザー</p>
+                <p className="font-semibold">
+                  こんにちは、{user.name} さん
+                </p>
+              </>
+            )}
+
+            {status === "unauth" && (
+              <p className="text-xs text-rose-400">
+                未ログインです。/login からログインしてね。
+              </p>
+            )}
+
+            {status === "error" && (
+              <p className="text-xs text-amber-400">
+                ユーザー情報の取得でエラーが出てるかも…。
+              </p>
+            )}
+          </div>
         </header>
 
-        <div className="grid gap-3">
+        {/* モックの課題カード一覧 */}
+        <div className="grid gap-3 mt-4">
           {mockTasks.map((task) => (
             <div
               key={task.id}
