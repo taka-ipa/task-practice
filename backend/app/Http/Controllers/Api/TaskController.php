@@ -22,4 +22,23 @@ class TaskController extends Controller
 
         return response()->json($tasks);
     }
+
+    public function store(Request $request)
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+        ]);
+
+        $task = $user->tasks()->create([
+            'name' => $validated['title'],
+            'description' => $validated['description'] ?? null,
+            'sort_order' => 0, // デフォルト値
+            'is_active' => true, // デフォルト値
+        ]);
+
+        return response()->json($task, 201);
+    }
 }
