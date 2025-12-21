@@ -9,7 +9,7 @@ class GameMatch extends Model
     protected $table = 'matches'; // ← モデル名とテーブルが違うからこれが重要！
 
     protected $fillable = [
-        'played_at', 'mode', 'rule', 'stage', 'weapon', 'is_win',
+        'user_id', 'played_at', 'mode', 'rule', 'stage', 'weapon', 'is_win', 'note',
     ];
 
     public function user()

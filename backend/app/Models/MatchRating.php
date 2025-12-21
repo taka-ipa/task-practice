@@ -12,11 +12,11 @@ class MatchRating extends Model
 
     public function match()
     {
-        return $this->belongsTo(GameMatch::class);
+        return $this->belongsTo(GameMatch::class, 'match_id');
     }
 
     public function task()
     {
-        return $this->belongsTo(Task::class);
+        return $this->belongsTo(Task::class, 'task_id');
     }
 }

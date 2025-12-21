@@ -6,20 +6,31 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('match_ratings', function (Blueprint $table) {
             $table->id();
+
+            $table->foreignId('match_id')
+                ->constrained('matches')
+                ->cascadeOnDelete();
+
+            $table->foreignId('task_id')
+                ->constrained('tasks')
+                ->cascadeOnDelete();
+
+            $table->string('rating', 1); // "○" "△" "×"
+
             $table->timestamps();
+
+            // 同じ試合の同じ課題は1回だけ
+            $table->unique(['match_id', 'task_id']);
+
+            // よく検索しそうなら（任意）
+            $table->index(['task_id', 'rating']);
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('match_ratings');
