@@ -18,6 +18,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/tasks', [TaskController::class, 'store']);
     Route::post('/matches-with-ratings', [MatchesWithRatingsController::class, 'store']);
     Route::get('/matches', [MatchController::class, 'index']);
+    Route::post('/matches', [MatchController::class, 'store']);
 });
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {

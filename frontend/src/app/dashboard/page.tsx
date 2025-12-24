@@ -96,10 +96,36 @@ export default function DashboardPage() {
 
   const closeAdd = () => setIsAddOpen(false);
 
+  const fetchMatches = async () => {
+    try {
+      setMatchesStatus("loading");
+      const res = await api.get<Match[]>("/api/matches", {
+        params: { date: today },
+      });
+      setMatches(res.data);
+      setMatchesStatus("ok");
+    } catch (e) {
+      console.error("api/matches エラー:", e);
+      setMatchesStatus("error");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("submit match form:", form);
-    closeAdd();
+
+    const payload = {
+      ...form,
+      is_win: form.is_win === "win",
+    };
+
+    try {
+      await api.post("/api/matches", payload);
+      await fetchMatches();   // 今日の試合一覧を再取得
+      closeAdd();             // 成功したら閉じる
+    } catch (error) {
+      console.error("failed to create match", error);
+      // 余裕あればここでエラー表示
+    }
   };
 
   // ログインユーザー取得
