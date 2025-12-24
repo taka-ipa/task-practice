@@ -1,7 +1,7 @@
 // app/dashboard/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState,useMemo } from "react";
 import api from "@/lib/api";
 
 type User = {
@@ -23,6 +23,16 @@ type ApiTask = {
   sort_order: number | null;
 };
 
+type Match = {
+  id: number;
+  played_at: string | null;
+  mode: string | null;
+  rule: string | null;
+  stage: string | null;
+  weapon: string | null;
+  is_win: boolean | null;
+};
+
 const mockTasks: Task[] = [
   { id: 1, title: "初弾精度", todayRating: "○" },
   { id: 2, title: "デス後の立ち位置", todayRating: "△" },
@@ -36,6 +46,21 @@ export default function DashboardPage() {
   );
 
   const [tasks, setTasks] = useState<Task[]>(mockTasks); // 最初はモックで表示しとく
+
+  // ★ 追加：matches用state
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [matchesStatus, setMatchesStatus] = useState<
+    "idle" | "loading" | "ok" | "error"
+  >("idle");
+
+  // ★ 追加：今日の日付（YYYY-MM-DD）
+  const today = useMemo(() => {
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  }, []);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -83,6 +108,26 @@ export default function DashboardPage() {
   fetchTasks();
 }, [status]);
 
+// ★ 追加：matches取得
+  useEffect(() => {
+    if (status !== "ok") return;
+
+    const fetchMatches = async () => {
+      try {
+        setMatchesStatus("loading");
+        const res = await api.get<Match[]>("/api/matches", {
+          params: { date: today },
+        });
+        setMatches(res.data);
+        setMatchesStatus("ok");
+      } catch (e) {
+        console.error("api/matches エラー:", e);
+        setMatchesStatus("error");
+      }
+    };
+
+    fetchMatches();
+  }, [status, today]);
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-50 p-6">
@@ -95,7 +140,7 @@ export default function DashboardPage() {
             </p>
             <h1 className="text-2xl font-bold">今日の課題</h1>
             <p className="text-xs text-slate-400 mt-1">
-              ※ 今はモックデータ（あとでAPIにつなぐ）
+              ※ 課題は /api/tasks から取得（評価はまだ仮）
             </p>
           </div>
 
@@ -108,9 +153,7 @@ export default function DashboardPage() {
             {status === "ok" && user && (
               <>
                 <p className="text-xs text-slate-400">ログイン中のユーザー</p>
-                <p className="font-semibold">
-                  こんにちは、{user.name} さん
-                </p>
+                <p className="font-semibold">こんにちは、{user.name} さん</p>
               </>
             )}
 
@@ -128,12 +171,17 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        {/* モックの課題カード一覧 */}
-        <div className="grid gap-3 mt-4">
-          {tasks.length === 0 ? (
-            <div className="rounded-xl bg-slate-900/80 border border-slate-700 px-4 py-3 text-sm text-slate-400">
-              課題がまだないよ（/api/tasks が空だった）
-            </div>
+        {/* 課題カード一覧 */}
+        <section className="space-y-3">
+          <div className="flex items-end justify-between">
+            <h2 className="text-lg font-semibold">課題</h2>
+          </div>
+
+          <div className="grid gap-3">
+            {tasks.length === 0 ? (
+              <div className="rounded-xl bg-slate-900/80 border border-slate-700 px-4 py-3 text-sm text-slate-400">
+                課題がまだないよ（/api/tasks が空だった）
+              </div>
           ) : (
             tasks.map((task) => (
               <div
@@ -161,6 +209,59 @@ export default function DashboardPage() {
             ))
           )}
         </div>
+      </section>
+
+      {/* ★ 追加：今日の試合一覧 */}
+      <section className="space-y-3">
+        <div className="flex items-end justify-between">
+          <div>
+            <h2 className="text-lg font-semibold">今日の試合</h2>
+            <p className="text-xs text-slate-400">({today})</p>
+          </div>
+        </div>
+
+        {status !== "ok" ? (
+          <div className="rounded-xl bg-slate-900/80 border border-slate-700 px-4 py-3 text-sm text-slate-400">
+            ログインすると試合が見れるよ
+          </div>
+        ) : matchesStatus === "loading" ? (
+          <div className="rounded-xl bg-slate-900/80 border border-slate-700 px-4 py-3 text-sm text-slate-400">
+            読み込み中...
+          </div>
+        ) : matchesStatus === "error" ? (
+          <div className="rounded-xl bg-slate-900/80 border border-slate-700 px-4 py-3 text-sm text-rose-300">
+            /api/matches の取得でエラーが出たかも（コンソール見てね）
+          </div>
+        ) : matches.length === 0 ? (
+          <div className="rounded-xl bg-slate-900/80 border border-slate-700 px-4 py-3 text-sm text-slate-400">
+            今日の試合はまだないよ
+          </div>
+        ) : (
+          <div className="grid gap-3">
+            {matches.map((m) => (
+              <div
+                key={m.id}
+                className="rounded-xl bg-slate-900/80 border border-slate-700 px-4 py-3"
+              >
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium">
+                    {m.rule ?? "-"} / {m.stage ?? "-"}
+                  </p>
+                  <p className="text-xs">
+                    {m.is_win === null ? "-" : m.is_win ? "WIN" : "LOSE"}
+                  </p>
+                </div>
+                <p className="text-xs text-slate-400 mt-1">
+                  {m.mode ?? "-"} / {m.weapon ?? "-"}
+                </p>
+
+                {/* 将来 detail を作ったらここをリンクにする */}
+                {/* <Link href={`/matches/${m.id}`}>詳細</Link> */}
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
       </div>
     </main>
   );

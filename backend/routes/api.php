@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\TaskController;
 use App\Http\Controllers\Api\MatchesWithRatingsController;
+use App\Http\Controllers\Api\MatchController;
 use Illuminate\Http\Request;
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -16,6 +17,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/tasks', [TaskController::class, 'index']);
     Route::post('/tasks', [TaskController::class, 'store']);
     Route::post('/matches-with-ratings', [MatchesWithRatingsController::class, 'store']);
+    Route::get('/matches', [MatchController::class, 'index']);
 });
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
