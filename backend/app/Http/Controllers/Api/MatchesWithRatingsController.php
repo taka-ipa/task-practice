@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreMatchWithRatingsRequest;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -16,51 +18,31 @@ class MatchesWithRatingsController extends Controller
     /**
      * 試合1件 + 評価（複数）をまとめて登録
      */
-    public function store(Request $request)
+    public function store(StoreMatchWithRatingsRequest $request)
 {
     $user = $request->user();
-    if (!$user) {
-        return response()->json(['message' => 'Unauthenticated.'], 401);
-    }
-
-    $validated = $request->validate([
-        'played_at' => ['nullable', 'date'],
-        'mode'      => ['nullable', 'string', 'max:255'],
-        'rule'      => ['nullable', 'string', 'max:255'],
-        'stage'     => ['nullable', 'string', 'max:255'],
-        'weapon'    => ['nullable', 'string', 'max:255'],
-        'is_win'    => ['nullable', 'boolean'],
-        'note'      => ['nullable', 'string'],
-
-        'ratings'           => ['required', 'array', 'min:1'],
-        'ratings.*.task_id' => ['required', 'integer'],
-        'ratings.*.rating'  => ['required', 'string', Rule::in(['○', '△', '×'])],
-    ]);
+    $validated = $request->validated();
 
     $taskIds = collect($validated['ratings'])->pluck('task_id')->unique()->values();
 
-    $ownedTaskCount = Task::query()
-        ->where('user_id', $user->id)
+    $ownedTaskCount = $user->tasks()
         ->whereIn('id', $taskIds)
         ->count();
-
     if ($ownedTaskCount !== $taskIds->count()) {
-        return response()->json([
-            'message' => 'ratings に自分の課題ではない task_id が含まれています',
-        ], 422);
+        throw ValidationException::withMessages([
+            'ratings' => ['ratings に自分の課題ではない task_id が含まれています'],
+        ]);
     }
 
     if ($taskIds->count() !== count($validated['ratings'])) {
-        return response()->json([
-            'message' => 'ratings に同じ task_id が重複しています',
-        ], 422);
+        throw ValidationException::withMessages([
+            'ratings' => ['ratings に同じ task_id が重複しています'],
+        ]);
     }
 
-    $userId = $user->id;
-
-    $result = DB::transaction(function () use ($validated, $userId) {
+    $result = DB::transaction(function () use ($validated, $user) {
         $match = GameMatch::create([
-            'user_id'   => $userId,
+            'user_id'   => $user->id,
             'played_at' => $validated['played_at'] ?? null,
             'mode'      => $validated['mode'] ?? null,
             'rule'      => $validated['rule'] ?? null,
@@ -70,13 +52,14 @@ class MatchesWithRatingsController extends Controller
             'note'      => $validated['note'] ?? null,
         ]);
 
-        $rows = collect($validated['ratings'])->map(function ($r) use ($match) {
+        $now = now();
+        $rows = collect($validated['ratings'])->map(function ($r) use ($match, $now) {
             return [
                 'match_id'   => $match->id,
                 'task_id'    => $r['task_id'],
                 'rating'     => $r['rating'],
-                'created_at' => now(),
-                'updated_at' => now(),
+                'created_at' => $now,
+                'updated_at' => $now,
             ];
         })->all();
 
