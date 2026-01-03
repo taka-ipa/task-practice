@@ -36,6 +36,9 @@ export default function NewMatchPage() {
 
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string>("");
+  type ApiValidationErrors = Record<string, string[]>;
+  const [errors, setErrors] = useState<ApiValidationErrors>({});
+  const [submittedOnce, setSubmittedOnce] = useState(false);
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -45,6 +48,24 @@ export default function NewMatchPage() {
         const list: Task[] = res.data?.data ?? res.data; // dataラップどっちでも耐える
         setTasks(list);
 
+        const resetForm = () => {
+          setForm({
+            played_at: "",
+            rule: "",
+            stage: "",
+            is_win: true,
+          });
+        
+          // tasks は残ってるので、ratings を "-" に戻す
+          setRatings((prev) => {
+            const next: Record<number, Rating> = {};
+            for (const t of tasks) next[t.id] = "-";
+            return next;
+          });
+
+          setSubmittedOnce(false);
+          setErrors({});
+        };
         // 初期値：未設定のものは "-" 扱い。stateに全部入れたいならここで埋める
         setRatings((prev) => {
           const next = { ...prev };
@@ -72,8 +93,29 @@ export default function NewMatchPage() {
     }));
   }, [ratings]);
 
+  const resetForm = () => {
+    setForm({
+      played_at: "",
+      rule: "",
+      stage: "",
+      is_win: true,
+    });
+
+    // tasks は残ってるので、ratings を "-" に戻す
+    setRatings((prev) => {
+      const next: Record<number, Rating> = {};
+      for (const t of tasks) next[t.id] = "-";
+      return next;
+    });
+
+    setSubmittedOnce(false);
+    setErrors({});
+  };
+
   const onSubmit = async () => {
     setMessage("");
+    setSubmittedOnce(true);
+    setErrors({});
     setSaving(true);
 
     try {
@@ -86,15 +128,19 @@ export default function NewMatchPage() {
       };
 
       const res = await api.post("/api/matches-with-ratings", payload);
-
       console.log(res.data);
       setMessage("保存しました ✅");
+
+      // 保存成功後、フォームをリセット
+      resetForm();
     } catch (e: any) {
       console.error(e);
 
       // 422（バリデーション）を一旦ざっくり出す
       if (e?.response?.status === 422) {
-        setMessage("入力内容を確認してね（422）");
+        const apiErrors = e?.response?.data?.errors;
+        setErrors(apiErrors);
+        setMessage("入力内容を確認してください");
       } else {
         setMessage("保存に失敗しました");
       }
@@ -121,6 +167,11 @@ export default function NewMatchPage() {
             onChange={(e) => setForm((p) => ({ ...p, played_at: e.target.value }))}
             className="rounded-md border p-2"
           />
+          {submittedOnce && !form.played_at && !errors.played_at && (
+            <p className="text-xs text-muted-foreground">
+              試合日時を入力してね（未入力でもOK運用ならこのままでもOK）
+            </p>
+          )}
         </div>
 
         <div className="flex gap-3">
@@ -132,6 +183,9 @@ export default function NewMatchPage() {
               className="w-full rounded-md border p-2"
               placeholder="エリア / ヤグラ…"
             />
+            {submittedOnce && !form.rule && !errors.rule && (
+              <p className="mt-1 text-xs text-muted-foreground">ルールを入力してね</p>
+            )}
           </div>
           <div className="flex-1">
             <label className="text-sm">stage</label>
@@ -141,6 +195,9 @@ export default function NewMatchPage() {
               className="w-full rounded-md border p-2"
               placeholder="マップ名"
             />
+            {submittedOnce && !form.stage && !errors.stage && (
+              <p className="mt-1 text-xs text-muted-foreground">ステージを入力してね</p>
+            )}
           </div>
         </div>
 
@@ -198,6 +255,25 @@ export default function NewMatchPage() {
 
       {/* 保存 */}
       <div className="space-y-2">
+        {Object.keys(errors).length > 0 && (
+          <div className="rounded-md border border-red-300 bg-red-50 p-3 text-sm">
+             <p className="font-medium text-red-700">入力エラーがあります</p>
+             <ul className="mt-2 list-disc pl-5 text-red-700">
+               {Object.entries(errors).flatMap(([field, msgs]) =>
+                 msgs.map((m, i) => (
+                   <li key={`${field}-${i}`}>
+                     {field === "played_at" ? `played_at: ${m}` :
+                      field === "rule" ? `rule: ${m}` :
+                      field === "stage" ? `stage: ${m}` :
+                      field === "is_win" ? `is_win: ${m}` :
+                      field === "ratings" ? `ratings: ${m}` :
+                      `${field}: ${m}`}
+                   </li>
+                 ))
+               )}
+             </ul>
+          </div>
+        )}
         <button
           type="button"
           onClick={onSubmit}
