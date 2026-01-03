@@ -13,18 +13,12 @@ class MatchController extends Controller
     {
         $user = $request->user();
 
-        // ?date=YYYY-MM-DD が無ければ今日（日本時間想定）
-        $date = $request->query('date', now()->toDateString());
+        // ?date=YYYY-MM-DD（無ければ直近を返す）
+        $date = $request->query('date'); // null あり
 
-        // その日の 00:00:00〜23:59:59
-        $start = Carbon::parse($date)->startOfDay();
-        $end   = Carbon::parse($date)->endOfDay();
-
-        // User -> gameMatches リレーションがある前提（以前の命名に合わせた）
-        $matches = $user->gameMatches()
-            ->whereBetween('played_at', [$start, $end])
-            ->orderByDesc('played_at')
-            ->get([
+        // User -> gameMatches リレーション前提
+        $query = $user->gameMatches()
+            ->select([
                 'id',
                 'played_at',
                 'mode',
@@ -34,6 +28,20 @@ class MatchController extends Controller
                 'is_win',
             ]);
 
+        if ($date) {
+            // 指定日の 00:00:00〜23:59:59（日本時間想定）
+            $start = Carbon::parse($date)->startOfDay()->subHours(9);
+            $end = Carbon::parse($date)->endOfDay()->subHours(9);
+
+            $query->whereBetween('played_at', [$start, $end])
+                  ->orderByDesc('played_at');
+        } else {
+            // dateが無い場合は直近20件
+            $query->orderBy('played_at', 'desc')->limit(20);
+        }
+
+        $matches = $query->get();
+        
         return response()->json($matches);
     }
 
