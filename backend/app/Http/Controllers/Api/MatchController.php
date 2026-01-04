@@ -61,4 +61,29 @@ class MatchController extends Controller
 
         return response()->json($match, 201);
     }
+
+    public function show(Request $request, GameMatch $match)
+    {
+        // 自分の試合以外は見せない
+        if ($match->user_id !== $request->user()->id) {
+            abort(404);
+        }
+
+        $match->load(['ratings.task']); // ratings = match_ratings の想定（名前は合わせて）
+
+        return response()->json([
+        'match' => [
+            'id' => $match->id,
+            'played_at' => $match->played_at,
+            'rule' => $match->rule,
+            'stage' => $match->stage,
+            'is_win' => $match->is_win,
+        ],
+        'ratings' => $match->ratings->map(fn ($r) => [
+            'task_id' => $r->task_id,
+            'title' => $r->task?->title,
+            'rating' => $r->rating,
+        ])->values(),
+    ]);
+}
 }

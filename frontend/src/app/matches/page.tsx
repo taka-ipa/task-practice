@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import api from "@/lib/api";
+import Link from "next/link";
 
 type Match = {
   id: number;
@@ -48,9 +49,15 @@ export default function MatchesPage() {
           {matches.map((m) => (
             <div
               key={m.id}
-              className="rounded-xl border p-4 flex items-center justify-between"
+              className="relative rounded-xl border p-4 flex items-center justify-between"
             >
-              <div className="space-y-1">
+              {/* カード全体をクリック可能にする透明リンク */}
+              <Link href={`/matches/${m.id}`} className="absolute inset-0" aria-label="試合詳細へ">
+                <span className="sr-only">詳細</span>
+              </Link>
+
+              {/* 表示内容は前面に出す */}
+              <div className="relative z-10 space-y-1">
                 <div className="text-sm">
                   {m.played_at ? new Date(m.played_at).toLocaleString() : "-"}
                 </div>
@@ -59,7 +66,7 @@ export default function MatchesPage() {
                 </div>
               </div>
 
-              <div className="text-lg font-bold">
+              <div className="relative z-10 text-lg font-bold">
                 {m.is_win === null ? "-" : m.is_win ? "WIN" : "LOSE"}
               </div>
             </div>
