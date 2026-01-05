@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\TaskController;
 use App\Http\Controllers\Api\MatchesWithRatingsController;
 use App\Http\Controllers\Api\MatchController;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Api\DailySummaryController;
 
 Route::post('/register', [AuthController::class, 'register']);
 
@@ -20,6 +21,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/matches', [MatchController::class, 'index']);
     Route::post('/matches', [MatchController::class, 'store']);
     Route::get('/matches/{match}', [MatchController::class, 'show']);
+    Route::get('/daily-summary', [DailySummaryController::class, 'index']);
 });
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
