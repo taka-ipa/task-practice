@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import api from "@/lib/api";
+import Link from "next/link";
+
 
 type User = {
   id: number;
@@ -228,7 +230,10 @@ export default function DashboardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
 
-  const todaySummary = summary?.days?.[summary.days.length - 1] ?? null;
+  const todaySummary = useMemo(() => {
+    if (!summary?.days) return null;
+    return summary.days.find((d) => d.date === today) ?? null;
+  }, [summary, today]);
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-50 p-6">
@@ -248,6 +253,13 @@ export default function DashboardPage() {
             >
               ＋ 試合を追加
             </button>
+
+            <Link
+              href="/matches"
+              className="inline-flex items-center rounded-lg bg-slate-800 hover:bg-slate-700 px-3 py-2 text-sm font-medium"
+            >
+              試合一覧へ
+            </Link>
           </div>
 
           <div className="text-right text-sm">
@@ -408,8 +420,9 @@ export default function DashboardPage() {
           ) : (
             <div className="grid gap-3">
               {matches.map((m) => (
-                <div
+                <Link
                   key={m.id}
+                  href={`/matches/${m.id}`}
                   className="rounded-xl bg-slate-900/80 border border-slate-700 px-4 py-3"
                 >
                   <div className="flex items-center justify-between">
@@ -423,7 +436,7 @@ export default function DashboardPage() {
                   <p className="text-xs text-slate-400 mt-1">
                     {m.mode ?? "-"} / {m.weapon ?? "-"}
                   </p>
-                </div>
+                </Link>
               ))}
             </div>
           )}
