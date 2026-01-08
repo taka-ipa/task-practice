@@ -41,6 +41,26 @@ type MatchForm = {
   weapon: string;
 };
 
+// ✅ 追加：DailySummary型
+type DailySummary = {
+  range: { from: string; to: string };
+  totals: {
+    matches: number;
+    wins: number;
+    losses: number;
+    win_rate: number;
+    ratings: { circle: number; triangle: number; cross: number };
+  };
+  days: {
+    date: string;
+    matches: number;
+    wins: number;
+    losses: number;
+    win_rate: number;
+    ratings: { circle: number; triangle: number; cross: number };
+  }[];
+};
+
 const mockTasks: Task[] = [
   { id: 1, title: "初弾精度", todayRating: "○" },
   { id: 2, title: "デス後の立ち位置", todayRating: "△" },
@@ -57,6 +77,12 @@ export default function DashboardPage() {
 
   const [matches, setMatches] = useState<Match[]>([]);
   const [matchesStatus, setMatchesStatus] = useState<
+    "idle" | "loading" | "ok" | "error"
+  >("idle");
+
+  // ✅ 追加：daily-summary state
+  const [summary, setSummary] = useState<DailySummary | null>(null);
+  const [summaryStatus, setSummaryStatus] = useState<
     "idle" | "loading" | "ok" | "error"
   >("idle");
 
@@ -110,6 +136,19 @@ export default function DashboardPage() {
     }
   };
 
+  // ✅ 追加：daily-summary取得関数（試合追加後に再取得したいので関数化）
+  const fetchSummary = async () => {
+    try {
+      setSummaryStatus("loading");
+      const res = await api.get<DailySummary>("/api/daily-summary");
+      setSummary(res.data);
+      setSummaryStatus("ok");
+    } catch (e) {
+      console.error("api/daily-summary エラー:", e);
+      setSummaryStatus("error");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -120,8 +159,9 @@ export default function DashboardPage() {
 
     try {
       await api.post("/api/matches", payload);
-      await fetchMatches();   // 今日の試合一覧を再取得
-      closeAdd();             // 成功したら閉じる
+      await fetchMatches(); // 今日の試合一覧を再取得
+      await fetchSummary(); // ✅ 追加：サマリーも更新
+      closeAdd(); // 成功したら閉じる
     } catch (error) {
       console.error("failed to create match", error);
       // 余裕あればここでエラー表示
@@ -172,22 +212,23 @@ export default function DashboardPage() {
   useEffect(() => {
     if (status !== "ok") return;
 
-    const fetchMatches = async () => {
-      try {
-        setMatchesStatus("loading");
-        const res = await api.get<Match[]>("/api/matches", {
-          params: { date: today },
-        });
-        setMatches(res.data);
-        setMatchesStatus("ok");
-      } catch (e) {
-        console.error("api/matches エラー:", e);
-        setMatchesStatus("error");
-      }
+    const run = async () => {
+      await fetchMatches();
     };
 
-    fetchMatches();
+    run();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, today]);
+
+  // ✅ 追加：日別サマリー取得（ログイン後に一回）
+  useEffect(() => {
+    if (status !== "ok") return;
+
+    fetchSummary();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
+
+  const todaySummary = summary?.days?.[summary.days.length - 1] ?? null;
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-50 p-6">
@@ -234,6 +275,74 @@ export default function DashboardPage() {
             )}
           </div>
         </header>
+
+        {/* ✅ 追加：直近7日サマリー */}
+        <section className="space-y-3">
+          <h2 className="text-lg font-semibold">直近7日サマリー</h2>
+
+          {status !== "ok" ? (
+            <div className="rounded-xl bg-slate-900/80 border border-slate-700 px-4 py-3 text-sm text-slate-400">
+              ログインするとサマリーが見れるよ
+            </div>
+          ) : summaryStatus === "loading" ? (
+            <div className="rounded-xl bg-slate-900/80 border border-slate-700 px-4 py-3 text-sm text-slate-400">
+              読み込み中...
+            </div>
+          ) : summaryStatus === "error" ? (
+            <div className="rounded-xl bg-slate-900/80 border border-slate-700 px-4 py-3 text-sm text-rose-300">
+              /api/daily-summary の取得でエラーが出たかも（コンソール見てね）
+            </div>
+          ) : !summary ? (
+            <div className="rounded-xl bg-slate-900/80 border border-slate-700 px-4 py-3 text-sm text-slate-400">
+              サマリーがまだないよ
+            </div>
+          ) : (
+            <div className="grid gap-3">
+              <div className="rounded-xl bg-slate-900/80 border border-slate-700 px-4 py-3">
+                <p className="text-xs text-slate-400">
+                  {summary.range.from} 〜 {summary.range.to}
+                </p>
+
+                <div className="mt-2 flex flex-wrap gap-4 text-sm">
+                  <div>
+                    <p className="text-xs text-slate-400">試合数</p>
+                    <p className="text-lg font-bold">{summary.totals.matches}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-slate-400">勝率</p>
+                    <p className="text-lg font-bold">{summary.totals.win_rate}%</p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-slate-400">○ / △ / ×</p>
+                    <p className="text-lg font-bold">
+                      {summary.totals.ratings.circle} / {summary.totals.ratings.triangle} /{" "}
+                      {summary.totals.ratings.cross}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {todaySummary && (
+                <div className="rounded-xl bg-slate-900/80 border border-slate-700 px-4 py-3">
+                  <p className="text-xs text-slate-400">今日（{todaySummary.date}）</p>
+                  <div className="mt-2 flex flex-wrap gap-4 text-sm">
+                    <div>
+                      <p className="text-xs text-slate-400">試合数</p>
+                      <p className="text-lg font-bold">{todaySummary.matches}</p>
+                    </div>
+
+                    <div>
+                      <p className="text-xs text-slate-400">勝率</p>
+                      <p className="text-lg font-bold">{todaySummary.win_rate}%</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </section>
 
         {/* 課題 */}
         <section className="space-y-3">
@@ -324,10 +433,7 @@ export default function DashboardPage() {
       {/* モーダル */}
       {isAddOpen && (
         <div className="fixed inset-0 z-50">
-          <div
-            className="absolute inset-0 bg-black/60"
-            onClick={closeAdd}
-          />
+          <div className="absolute inset-0 bg-black/60" onClick={closeAdd} />
           <div className="absolute inset-0 flex items-center justify-center p-4">
             <div className="w-full max-w-lg rounded-2xl bg-slate-900 border border-slate-700 p-5 shadow-xl">
               <div className="flex items-start justify-between gap-4">
@@ -388,9 +494,7 @@ export default function DashboardPage() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-xs text-slate-300">
-                      ルール（任意）
-                    </label>
+                    <label className="text-xs text-slate-300">ルール（任意）</label>
                     <input
                       value={form.rule}
                       onChange={(e) =>
@@ -402,9 +506,7 @@ export default function DashboardPage() {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs text-slate-300">
-                      ステージ（任意）
-                    </label>
+                    <label className="text-xs text-slate-300">ステージ（任意）</label>
                     <input
                       value={form.stage}
                       onChange={(e) =>
@@ -418,9 +520,7 @@ export default function DashboardPage() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-xs text-slate-300">
-                      モード（任意）
-                    </label>
+                    <label className="text-xs text-slate-300">モード（任意）</label>
                     <input
                       value={form.mode}
                       onChange={(e) =>
