@@ -17,9 +17,11 @@ type Task = {
   todayRating: "○" | "△" | "×" | "-";
 };
 
+type Rating = "○" | "△" | "×" | "-";
+
 type ApiTask = {
   id: number;
-  title: string;
+  name: string;
   description: string | null;
   sort_order: number | null;
 };
@@ -77,6 +79,18 @@ export default function DashboardPage() {
 
   const [tasks, setTasks] = useState<Task[]>(mockTasks);
 
+  // ✅ 追加：課題評価（task_id => "○"|"△"|"×"|"-"）
+  const [ratings, setRatings] = useState<Record<number, Rating>>({});
+
+  // ✅ 追加：UIイベント用関数（useEffectじゃなく、コンポーネント直下に置く）
+  const setRating = (taskId: number, r: Rating) => {
+    setRatings((prev) => ({ ...prev, [taskId]: r }));
+    // ついでに表示も変えたいなら tasks 側も更新する（任意）
+    setTasks((prev) =>
+      prev.map((t) => (t.id === taskId ? { ...t, todayRating: r } : t))
+    );
+  };
+
   const [matches, setMatches] = useState<Match[]>([]);
   const [matchesStatus, setMatchesStatus] = useState<
     "idle" | "loading" | "ok" | "error"
@@ -119,6 +133,7 @@ export default function DashboardPage() {
       ...defaultForm,
       played_at: new Date().toISOString().slice(0, 16),
     });
+    setRatings({});
     setIsAddOpen(true);
   };
 
@@ -154,18 +169,28 @@ export default function DashboardPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+     // ① ratings state（Record）→ 配列へ変換
+    const ratingsArray = Object.entries(ratings)
+      .filter(([_, r]) => r !== "-")
+      .map(([taskId, r]) => ({
+        task_id: Number(taskId),
+        rating: r as "○" | "△" | "×",
+      }));
+
+    // ② payload（試合 + ratings）
     const payload = {
       ...form,
       is_win: form.is_win === "win",
+      ratings: ratingsArray,
     };
 
     try {
-      await api.post("/api/matches", payload);
+      await api.post("/api/matches-with-ratings", payload);
       await fetchMatches(); // 今日の試合一覧を再取得
       await fetchSummary(); // ✅ 追加：サマリーも更新
       closeAdd(); // 成功したら閉じる
     } catch (error) {
-      console.error("failed to create match", error);
+      console.error("failed to create match with ratings", error);
       // 余裕あればここでエラー表示
     }
   };
@@ -197,7 +222,7 @@ export default function DashboardPage() {
 
         const mapped: Task[] = res.data.map((t) => ({
           id: t.id,
-          title: t.title,
+          title: t.name,
           todayRating: "-",
         }));
 
@@ -378,13 +403,25 @@ export default function DashboardPage() {
                     </p>
                   </div>
                   <div className="flex gap-2 text-sm">
-                    <button className="px-3 py-1 rounded-lg bg-emerald-500/80 hover:bg-emerald-400">
+                    <button
+                      type="button"
+                      onClick={() => setRating(task.id, "○")}
+                      className="px-3 py-1 rounded-lg bg-emerald-500/80 hover:bg-emerald-400"
+                    >
                       ○
                     </button>
-                    <button className="px-3 py-1 rounded-lg bg-amber-500/80 hover:bg-amber-400">
+                    <button
+                      type="button"
+                      onClick={() => setRating(task.id, "△")}
+                      className="px-3 py-1 rounded-lg bg-amber-500/80 hover:bg-amber-400"
+                    >
                       △
                     </button>
-                    <button className="px-3 py-1 rounded-lg bg-rose-500/80 hover:bg-rose-400">
+                    <button
+                      type="button"
+                      onClick={() => setRating(task.id, "×")}
+                      className="px-3 py-1 rounded-lg bg-rose-500/80 hover:bg-rose-400"
+                    >
                       ×
                     </button>
                   </div>
@@ -555,6 +592,65 @@ export default function DashboardPage() {
                       className="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm"
                     />
                   </div>
+                </div>
+
+                <div className="pt-2 space-y-2">
+                  <p className="text-sm font-semibold">この試合の課題評価</p>
+
+                  {tasks.length === 0 ? (
+                    <div className="rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm text-slate-400">
+                      課題がまだないよ（先に課題を追加してね）
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {tasks.map((task) => (
+                        <div
+                          key={task.id}
+                          className="flex items-center justify-between rounded-lg bg-slate-950 border border-slate-700 px-3 py-2"
+                        >
+                          <p className="text-sm">{task.title}</p>
+
+                          <div className="flex gap-1 text-sm">
+                            <button
+                              type="button"
+                              onClick={() => setRating(task.id, "○")}
+                              className={`px-2 py-1 rounded ${
+                                ratings[task.id] === "○"
+                                  ? "bg-emerald-500/80 border border-emerald-400"
+                                  : "bg-slate-800 hover:bg-slate-700 border border-slate-700"
+                              }`}
+                            >
+                              ○
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => setRating(task.id, "△")}
+                              className={`px-2 py-1 rounded ${
+                                ratings[task.id] === "△"
+                                  ? "bg-amber-500/80 border border-amber-400"
+                                  : "bg-slate-800 hover:bg-slate-700 border border-slate-700"
+                              }`}
+                            >
+                              △
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => setRating(task.id, "×")}
+                              className={`px-2 py-1 rounded ${
+                                ratings[task.id] === "×"
+                                  ? "bg-rose-500/80 border border-rose-400"
+                                  : "bg-slate-800 hover:bg-slate-700 border border-slate-700"
+                              }`}
+                            >
+                              ×
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className="pt-2 flex gap-2">
