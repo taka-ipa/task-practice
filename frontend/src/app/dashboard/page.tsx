@@ -102,13 +102,15 @@ export default function DashboardPage() {
     "idle" | "loading" | "ok" | "error"
   >("idle");
 
-  // 今日の日付（YYYY-MM-DD）
-  const today = useMemo(() => {
+  // 今日の日付（YYYY-MM-DD）※Hydration対策でuseEffect内でセット
+  const [today, setToday] = useState<string>("");
+
+  useEffect(() => {
     const d = new Date();
     const yyyy = d.getFullYear();
     const mm = String(d.getMonth() + 1).padStart(2, "0");
     const dd = String(d.getDate()).padStart(2, "0");
-    return `${yyyy}-${mm}-${dd}`;
+    setToday(`${yyyy}-${mm}-${dd}`);
   }, []);
 
   // 試合追加モーダル
@@ -140,6 +142,7 @@ export default function DashboardPage() {
   const closeAdd = () => setIsAddOpen(false);
 
   const fetchMatches = async () => {
+    if (!today) return;
     try {
       setMatchesStatus("loading");
       const res = await api.get<Match[]>("/api/matches", {
@@ -238,12 +241,8 @@ export default function DashboardPage() {
   // 今日の試合取得
   useEffect(() => {
     if (status !== "ok") return;
-
-    const run = async () => {
-      await fetchMatches();
-    };
-
-    run();
+    if (!today) return;
+    fetchMatches();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, today]);
 
@@ -435,7 +434,7 @@ export default function DashboardPage() {
         <section className="space-y-3">
           <div>
             <h2 className="text-lg font-semibold">今日の試合</h2>
-            <p className="text-xs text-slate-400">({today})</p>
+            <p className="text-xs text-slate-400">({today || "-"})</p>
           </div>
 
           {status !== "ok" ? (
