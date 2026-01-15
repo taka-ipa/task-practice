@@ -69,21 +69,23 @@ class MatchController extends Controller
             abort(404);
         }
 
-        $match->load(['ratings.task']); // ratings = match_ratings の想定（名前は合わせて）
+        $match->load(['ratings.task']); // リレーション読み込み
 
         return response()->json([
         'match' => [
             'id' => $match->id,
             'played_at' => $match->played_at,
+            'mode' => $match->mode,
             'rule' => $match->rule,
             'stage' => $match->stage,
+            'weapon' => $match->weapon,
             'is_win' => $match->is_win,
         ],
         'ratings' => $match->ratings->map(fn ($r) => [
             'task_id' => $r->task_id,
-            'title' => $r->task?->title,
+            'title' => $r->task?->name,
             'rating' => $r->rating,
         ])->values(),
-    ]);
-}
+        ]);
+    }
 }

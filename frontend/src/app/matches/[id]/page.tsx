@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import api from "@/lib/api";
@@ -8,15 +8,17 @@ import api from "@/lib/api";
 type Match = {
   id: number;
   played_at: string | null;
+  mode: string | null;
   rule: string | null;
   stage: string | null;
+  weapon: string | null;
   is_win: boolean | null;
 };
 
 type Rating = {
   task_id: number;
   title: string | null;
-  rating: "○" | "△" | "×" | "-" | string;
+  rating: "○" | "△" | "×" | "-";
 };
 
 type MatchDetailRes = {
@@ -33,7 +35,14 @@ export default function MatchDetailPage() {
     "loading"
   );
 
+  const playedAtText = useMemo(() => {
+    if (!data?.match.played_at) return "-";
+    return new Date(data.match.played_at).toLocaleString();
+  }, [data?.match.played_at]);
+
   useEffect(() => {
+    if (!id) return;
+
     const fetchDetail = async () => {
       try {
         const res = await api.get<MatchDetailRes>(`/api/matches/${id}`);
@@ -82,10 +91,15 @@ export default function MatchDetailPage() {
         </div>
 
         <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-2">
-          <div>日時：{match.played_at ?? "-"}</div>
+          <div>日時：{playedAtText}</div>
           <div>ルール：{match.rule ?? "-"}</div>
           <div>ステージ：{match.stage ?? "-"}</div>
-          <div>結果：{match.is_win === null ? "-" : match.is_win ? "勝ち" : "負け"}</div>
+          <div>モード：{match.mode ?? "-"}</div>
+          <div>武器：{match.weapon ?? "-"}</div>
+          <div>
+            結果：
+            {match.is_win === null ? "-" : match.is_win ? "勝ち" : "負け"}
+          </div>
         </div>
 
         <div className="rounded-xl border border-white/10 bg-white/5 p-4">
@@ -96,7 +110,10 @@ export default function MatchDetailPage() {
           ) : (
             <div className="space-y-2">
               {ratings.map((r) => (
-                <div key={r.task_id} className="flex items-center justify-between border-b border-white/10 pb-2">
+                <div
+                  key={r.task_id}
+                  className="flex items-center justify-between border-b border-white/10 pb-2 last:border-b-0 last:pb-0"
+                >
                   <div className="text-sm">{r.title ?? `Task#${r.task_id}`}</div>
                   <div className="text-lg font-bold">{r.rating}</div>
                 </div>
@@ -107,5 +124,4 @@ export default function MatchDetailPage() {
       </div>
     </div>
   );
-
 }

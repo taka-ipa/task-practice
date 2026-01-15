@@ -14,8 +14,10 @@ type Rating = "○" | "△" | "×" | "-";
 
 type MatchForm = {
   played_at: string; // datetime-local (YYYY-MM-DDTHH:mm)
+  mode: string;
   rule: string;
   stage: string;
+  weapon: string;
   is_win: boolean;
 };
 
@@ -26,8 +28,10 @@ export default function NewMatchPage() {
   // 例：最低限の試合フォーム（必要なければ後で足してOK）
   const [form, setForm] = useState<MatchForm>({
     played_at: "",
+    mode: "",
     rule: "",
     stage: "",
+    weapon: "",
     is_win: true,
   });
 
@@ -51,8 +55,10 @@ export default function NewMatchPage() {
         const resetForm = () => {
           setForm({
             played_at: "",
+            mode: "",
             rule: "",
             stage: "",
+            weapon: "",
             is_win: true,
           });
         
@@ -96,8 +102,10 @@ export default function NewMatchPage() {
   const resetForm = () => {
     setForm({
       played_at: "",
+      mode: "",
       rule: "",
       stage: "",
+      weapon: "",
       is_win: true,
     });
 
@@ -121,8 +129,10 @@ export default function NewMatchPage() {
     try {
       const payload = {
         played_at: form.played_at || null,
+        mode: form.mode || null,
         rule: form.rule || null,
         stage: form.stage || null,
+        weapon: form.weapon || null,
         is_win: form.is_win,
         ratings: ratingArray,
       };

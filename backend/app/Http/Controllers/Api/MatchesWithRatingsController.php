@@ -19,7 +19,7 @@ class MatchesWithRatingsController extends Controller
      * 試合1件 + 評価（複数）をまとめて登録
      */
     public function store(StoreMatchWithRatingsRequest $request)
-{
+    {
     $user = $request->user();
     $validated = $request->validated();
 
