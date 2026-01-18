@@ -21,6 +21,7 @@ class StoreMatchWithRatingsRequest extends FormRequest
             'stage'     => ['nullable', 'string', 'max:255'],
             'weapon'    => ['nullable', 'string', 'max:255'],
             'is_win'    => ['nullable', 'boolean'],
+            'note'      => ['nullable', 'string', 'max:1000'],
 
             'ratings'               => ['required', 'array', 'min:1'],
             'ratings.*.task_id'     => ['required', 'integer'],
