@@ -22,6 +22,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/matches', [MatchController::class, 'store']);
     Route::get('/matches/{match}', [MatchController::class, 'show']);
     Route::get('/daily-summary', [DailySummaryController::class, 'index']);
+    Route::patch('/matches/{match}', [MatchController::class, 'update']);
 });
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {

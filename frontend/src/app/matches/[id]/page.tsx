@@ -13,6 +13,7 @@ type Match = {
   stage: string | null;
   weapon: string | null;
   is_win: boolean | null;
+  note: string | null;
 };
 
 type Rating = {
@@ -35,6 +36,11 @@ export default function MatchDetailPage() {
     "loading"
   );
 
+  // note編集用
+  const [isEditingNote, setIsEditingNote] = useState(false);
+  const [noteDraft, setNoteDraft] = useState("");
+  const [savingNote, setSavingNote] = useState(false);
+
   const playedAtText = useMemo(() => {
     if (!data?.match.played_at) return "-";
     return new Date(data.match.played_at).toLocaleString();
@@ -47,6 +53,7 @@ export default function MatchDetailPage() {
       try {
         const res = await api.get<MatchDetailRes>(`/api/matches/${id}`);
         setData(res.data);
+        setNoteDraft(res.data.match.note ?? ""); // ✅ ここで初期化
         setStatus("ok");
       } catch (e: any) {
         const code = e?.response?.status;
@@ -57,6 +64,31 @@ export default function MatchDetailPage() {
 
     fetchDetail();
   }, [id]);
+
+  const saveNote = async () => {
+    if (!data) return;
+
+    try {
+      setSavingNote(true);
+
+      const res = await api.patch<{ id: number; note: string | null }>(
+        `/api/matches/${data.match.id}`,
+        { note: noteDraft.trim() === "" ? null : noteDraft }
+      );
+
+      // dataを更新（match.noteだけ差し替え）
+      setData({
+        ...data,
+        match: { ...data.match, note: res.data.note },
+      });
+
+      setIsEditingNote(false);
+    } catch (e) {
+      alert("保存に失敗しました");
+    } finally {
+      setSavingNote(false);
+    }
+  };
 
   if (status === "loading") return <div className="p-6">Loading...</div>;
   if (status === "unauth")
@@ -100,6 +132,56 @@ export default function MatchDetailPage() {
             結果：
             {match.is_win === null ? "-" : match.is_win ? "勝ち" : "負け"}
           </div>
+        </div>
+
+        {/* ✅ メモ */}
+        <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-2">
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold">メモ</h2>
+
+            {!isEditingNote ? (
+              <button
+                className="underline"
+                onClick={() => setIsEditingNote(true)}
+              >
+                編集
+              </button>
+            ) : (
+              <button
+                className="underline"
+                disabled={savingNote}
+                onClick={() => {
+                  setIsEditingNote(false);
+                  setNoteDraft(match.note ?? "");
+                }}
+              >
+                キャンセル
+              </button>
+            )}
+          </div>
+
+          {!isEditingNote ? (
+            <div className="whitespace-pre-wrap text-sm text-white/80">
+              {match.note && match.note.trim() !== "" ? match.note : "なし"}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <textarea
+                className="w-full rounded border border-white/10 bg-slate-900 p-2 text-sm"
+                rows={6}
+                value={noteDraft}
+                onChange={(e) => setNoteDraft(e.target.value)}
+              />
+
+              <button
+                className="rounded border border-white/10 bg-white/10 px-3 py-1 text-sm"
+                onClick={saveNote}
+                disabled={savingNote}
+              >
+                {savingNote ? "保存中..." : "保存"}
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="rounded-xl border border-white/10 bg-white/5 p-4">

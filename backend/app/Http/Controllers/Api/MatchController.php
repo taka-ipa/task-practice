@@ -80,12 +80,33 @@ class MatchController extends Controller
             'stage' => $match->stage,
             'weapon' => $match->weapon,
             'is_win' => $match->is_win,
+            'note' => $match->note,
         ],
         'ratings' => $match->ratings->map(fn ($r) => [
             'task_id' => $r->task_id,
             'title' => $r->task?->name,
             'rating' => $r->rating,
         ])->values(),
+        ]);
+    }
+
+    public function update(Request $request, GameMatch $match)
+    {
+        // 自分の試合だけ更新できるように（重要）
+        if ($match->user_id !== $request->user()->id) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        $validated = $request->validate([
+            'note' => ['nullable', 'string', 'max:5000'],
+        ]);
+
+        $match->note = $validated['note'] ?? null;
+        $match->save();
+
+        return response()->json([
+            'id' => $match->id,
+            'note' => $match->note,
         ]);
     }
 }
