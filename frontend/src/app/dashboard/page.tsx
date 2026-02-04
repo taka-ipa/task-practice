@@ -4,6 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import api from "@/lib/api";
 import Link from "next/link";
 
+import { PageHeader } from "@/components/common/PageHeader";
+import { Card } from "@/components/ui/Card";
+import { ResultBadge } from "@/components/ui/ResultBadge";
+import { RatingBadge } from "@/components/ui/RatingBadge";
 
 type User = {
   id: number;
@@ -11,13 +15,13 @@ type User = {
   email: string;
 };
 
+type Rating = "○" | "△" | "×" | "-";
+
 type Task = {
   id: number;
   title: string;
-  todayRating: "○" | "△" | "×" | "-";
+  todayRating: Rating;
 };
-
-type Rating = "○" | "△" | "×" | "-";
 
 type ApiTask = {
   id: number;
@@ -45,7 +49,7 @@ type MatchForm = {
   weapon: string;
 };
 
-// ✅ 追加：DailySummary型
+// DailySummary型
 type DailySummary = {
   range: { from: string; to: string };
   totals: {
@@ -65,11 +69,17 @@ type DailySummary = {
   }[];
 };
 
-const mockTasks: Task[] = [
-  { id: 1, title: "初弾精度", todayRating: "○" },
-  { id: 2, title: "デス後の立ち位置", todayRating: "△" },
-  { id: 3, title: "打開の入り方", todayRating: "×" },
-];
+function formatPlayedAt(playedAt: string) {
+  const s = playedAt.replace(" ", "T");
+  const d = new Date(s);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleString("ja-JP", {
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 
 export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -77,15 +87,12 @@ export default function DashboardPage() {
     "loading"
   );
 
-  const [tasks, setTasks] = useState<Task[]>(mockTasks);
-
-  // ✅ 追加：課題評価（task_id => "○"|"△"|"×"|"-"）
+  const [tasks, setTasks] = useState<Task[]>([]);
+  // 課題評価（task_id => "○"|"△"|"×"|"-"）
   const [ratings, setRatings] = useState<Record<number, Rating>>({});
 
-  // ✅ 追加：UIイベント用関数（useEffectじゃなく、コンポーネント直下に置く）
   const setRating = (taskId: number, r: Rating) => {
     setRatings((prev) => ({ ...prev, [taskId]: r }));
-    // ついでに表示も変えたいなら tasks 側も更新する（任意）
     setTasks((prev) =>
       prev.map((t) => (t.id === taskId ? { ...t, todayRating: r } : t))
     );
@@ -96,7 +103,6 @@ export default function DashboardPage() {
     "idle" | "loading" | "ok" | "error"
   >("idle");
 
-  // ✅ 追加：daily-summary state
   const [summary, setSummary] = useState<DailySummary | null>(null);
   const [summaryStatus, setSummaryStatus] = useState<
     "idle" | "loading" | "ok" | "error"
@@ -115,6 +121,7 @@ export default function DashboardPage() {
 
   // 試合追加モーダル
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const defaultForm: MatchForm = useMemo(
     () => ({
@@ -156,7 +163,6 @@ export default function DashboardPage() {
     }
   };
 
-  // ✅ 追加：daily-summary取得関数（試合追加後に再取得したいので関数化）
   const fetchSummary = async () => {
     try {
       setSummaryStatus("loading");
@@ -171,8 +177,8 @@ export default function DashboardPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
 
-     // ① ratings state（Record）→ 配列へ変換
     const ratingsArray = Object.entries(ratings)
       .filter(([_, r]) => r !== "-")
       .map(([taskId, r]) => ({
@@ -180,7 +186,6 @@ export default function DashboardPage() {
         rating: r as "○" | "△" | "×",
       }));
 
-    // ② payload（試合 + ratings）
     const payload = {
       ...form,
       is_win: form.is_win === "win",
@@ -188,13 +193,15 @@ export default function DashboardPage() {
     };
 
     try {
+      setIsSubmitting(true);
       await api.post("/api/matches-with-ratings", payload);
-      await fetchMatches(); // 今日の試合一覧を再取得
-      await fetchSummary(); // ✅ 追加：サマリーも更新
-      closeAdd(); // 成功したら閉じる
+      await fetchMatches();
+      await fetchSummary();
+      closeAdd();
     } catch (error) {
       console.error("failed to create match with ratings", error);
-      // 余裕あればここでエラー表示
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -246,10 +253,9 @@ export default function DashboardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, today]);
 
-  // ✅ 追加：日別サマリー取得（ログイン後に一回）
+  // 日別サマリー取得
   useEffect(() => {
     if (status !== "ok") return;
-
     fetchSummary();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
@@ -259,270 +265,303 @@ export default function DashboardPage() {
     return summary.days.find((d) => d.date === today) ?? null;
   }, [summary, today]);
 
+  // ------- ここから UI -------
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-50 p-6">
-      <div className="max-w-3xl mx-auto space-y-4">
-        {/* ヘッダー */}
-        <header className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-xs text-slate-400 mb-1">課題練習アプリ（仮）</p>
-            <h1 className="text-2xl font-bold">今日の課題</h1>
-            <p className="text-xs text-slate-400 mt-1">
-              ※ 課題は /api/tasks から取得（評価はまだ仮）
-            </p>
-
+    <div className="space-y-6">
+      <PageHeader
+        title="今日の課題"
+        description="課題ごとに○△×で振り返り。試合もまとめて記録できます。"
+        right={
+          <div className="flex items-center gap-2">
             <button
               onClick={openAdd}
-              className="mt-3 inline-flex items-center gap-2 rounded-lg bg-sky-500/80 hover:bg-sky-400 px-3 py-2 text-sm font-medium"
+              className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm disabled:opacity-50"
+              disabled={status !== "ok"}
+              type="button"
             >
               ＋ 試合を追加
             </button>
-
             <Link
               href="/matches"
-              className="inline-flex items-center rounded-lg bg-slate-800 hover:bg-slate-700 px-3 py-2 text-sm font-medium"
+              className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm"
             >
               試合一覧へ
             </Link>
           </div>
+        }
+      />
 
-          <div className="text-right text-sm">
-            {status === "loading" && (
-              <p className="text-slate-400 text-xs">ユーザー確認中...</p>
-            )}
+      {/* ユーザー状態 */}
+      <Card className="p-5">
+        {status === "loading" && (
+          <p className="text-sm text-muted-foreground">ユーザー確認中...</p>
+        )}
 
-            {status === "ok" && user && (
-              <>
-                <p className="text-xs text-slate-400">ログイン中のユーザー</p>
-                <p className="font-semibold">こんにちは、{user.name} さん</p>
-              </>
-            )}
-
-            {status === "unauth" && (
-              <p className="text-xs text-rose-400">
-                未ログインです。/login からログインしてね。
-              </p>
-            )}
-
-            {status === "error" && (
-              <p className="text-xs text-amber-400">
-                ユーザー情報の取得でエラーが出てるかも…。
-              </p>
-            )}
+        {status === "ok" && user && (
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm text-muted-foreground">ログイン中</p>
+              <p className="text-base font-semibold">こんにちは、{user.name} さん</p>
+            </div>
+            <div className="text-sm text-muted-foreground">今日：{today || "-"}</div>
           </div>
-        </header>
+        )}
 
-        {/* ✅ 追加：直近7日サマリー */}
-        <section className="space-y-3">
-          <h2 className="text-lg font-semibold">直近7日サマリー</h2>
+        {status === "unauth" && (
+          <div className="flex items-center justify-between gap-4">
+            <p className="text-sm text-muted-foreground">
+              未ログインです。ログインすると記録できます。
+            </p>
+            <Link
+              href="/login"
+              className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm"
+            >
+              /loginへ
+            </Link>
+          </div>
+        )}
 
-          {status !== "ok" ? (
-            <div className="rounded-xl bg-slate-900/80 border border-slate-700 px-4 py-3 text-sm text-slate-400">
+        {status === "error" && (
+          <p className="text-sm text-muted-foreground">
+            ユーザー情報の取得でエラーが出てるかも…（コンソール見てね）
+          </p>
+        )}
+      </Card>
+
+      {/* 直近7日サマリー */}
+      <div className="space-y-3">
+        <h2 className="text-lg font-semibold">直近7日サマリー</h2>
+
+        {status !== "ok" ? (
+          <Card className="p-6">
+            <p className="text-sm text-muted-foreground">
               ログインするとサマリーが見れるよ
-            </div>
-          ) : summaryStatus === "loading" ? (
-            <div className="rounded-xl bg-slate-900/80 border border-slate-700 px-4 py-3 text-sm text-slate-400">
-              読み込み中...
-            </div>
-          ) : summaryStatus === "error" ? (
-            <div className="rounded-xl bg-slate-900/80 border border-slate-700 px-4 py-3 text-sm text-rose-300">
+            </p>
+          </Card>
+        ) : summaryStatus === "loading" ? (
+          <Card className="p-6">
+            <p className="text-sm text-muted-foreground">読み込み中...</p>
+          </Card>
+        ) : summaryStatus === "error" ? (
+          <Card className="p-6">
+            <p className="text-sm text-muted-foreground">
               /api/daily-summary の取得でエラーが出たかも（コンソール見てね）
-            </div>
-          ) : !summary ? (
-            <div className="rounded-xl bg-slate-900/80 border border-slate-700 px-4 py-3 text-sm text-slate-400">
-              サマリーがまだないよ
-            </div>
-          ) : (
-            <div className="grid gap-3">
-              <div className="rounded-xl bg-slate-900/80 border border-slate-700 px-4 py-3">
-                <p className="text-xs text-slate-400">
-                  {summary.range.from} 〜 {summary.range.to}
+            </p>
+          </Card>
+        ) : !summary ? (
+          <Card className="p-6">
+            <p className="text-sm text-muted-foreground">サマリーがまだないよ</p>
+          </Card>
+        ) : (
+          <div className="grid gap-4">
+            <Card className="p-5">
+              <p className="text-sm text-muted-foreground">
+                {summary.range.from} 〜 {summary.range.to}
+              </p>
+
+              <div className="mt-3 flex flex-wrap gap-6">
+                <div>
+                  <p className="text-sm text-muted-foreground">試合数</p>
+                  <p className="text-2xl font-bold">{summary.totals.matches}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">勝率</p>
+                  <p className="text-2xl font-bold">{summary.totals.win_rate}%</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">○ / △ / ×</p>
+                  <p className="text-2xl font-bold">
+                    {summary.totals.ratings.circle} / {summary.totals.ratings.triangle} /{" "}
+                    {summary.totals.ratings.cross}
+                  </p>
+                </div>
+              </div>
+            </Card>
+
+            {todaySummary ? (
+              <Card className="p-5">
+                <p className="text-sm text-muted-foreground">
+                  今日（{todaySummary.date}）
                 </p>
-
-                <div className="mt-2 flex flex-wrap gap-4 text-sm">
+                <div className="mt-3 flex flex-wrap gap-6">
                   <div>
-                    <p className="text-xs text-slate-400">試合数</p>
-                    <p className="text-lg font-bold">{summary.totals.matches}</p>
+                    <p className="text-sm text-muted-foreground">試合数</p>
+                    <p className="text-2xl font-bold">{todaySummary.matches}</p>
                   </div>
-
                   <div>
-                    <p className="text-xs text-slate-400">勝率</p>
-                    <p className="text-lg font-bold">{summary.totals.win_rate}%</p>
-                  </div>
-
-                  <div>
-                    <p className="text-xs text-slate-400">○ / △ / ×</p>
-                    <p className="text-lg font-bold">
-                      {summary.totals.ratings.circle} / {summary.totals.ratings.triangle} /{" "}
-                      {summary.totals.ratings.cross}
-                    </p>
+                    <p className="text-sm text-muted-foreground">勝率</p>
+                    <p className="text-2xl font-bold">{todaySummary.win_rate}%</p>
                   </div>
                 </div>
-              </div>
+              </Card>
+            ) : null}
+          </div>
+        )}
+      </div>
 
-              {todaySummary && (
-                <div className="rounded-xl bg-slate-900/80 border border-slate-700 px-4 py-3">
-                  <p className="text-xs text-slate-400">今日（{todaySummary.date}）</p>
-                  <div className="mt-2 flex flex-wrap gap-4 text-sm">
-                    <div>
-                      <p className="text-xs text-slate-400">試合数</p>
-                      <p className="text-lg font-bold">{todaySummary.matches}</p>
-                    </div>
+      {/* 課題 */}
+      <div className="space-y-3">
+        <h2 className="text-lg font-semibold">課題</h2>
 
-                    <div>
-                      <p className="text-xs text-slate-400">勝率</p>
-                      <p className="text-lg font-bold">{todaySummary.win_rate}%</p>
+        {tasks.length === 0 ? (
+          <Card className="p-6">
+            <p className="text-sm text-muted-foreground">
+              課題がまだないよ（/api/tasks が空だった）
+            </p>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {tasks.map((task) => (
+              <Card key={task.id} className="p-5">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="text-base font-semibold">{task.title}</p>
+                    <div className="mt-2 flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">今日の評価</span>
+                      <RatingBadge rating={task.todayRating} />
                     </div>
                   </div>
-                </div>
-              )}
-            </div>
-          )}
-        </section>
 
-        {/* 課題 */}
-        <section className="space-y-3">
-          <h2 className="text-lg font-semibold">課題</h2>
-
-          <div className="grid gap-3">
-            {tasks.length === 0 ? (
-              <div className="rounded-xl bg-slate-900/80 border border-slate-700 px-4 py-3 text-sm text-slate-400">
-                課題がまだないよ（/api/tasks が空だった）
-              </div>
-            ) : (
-              tasks.map((task) => (
-                <div
-                  key={task.id}
-                  className="flex items-center justify-between rounded-xl bg-slate-900/80 border border-slate-700 px-4 py-3"
-                >
-                  <div>
-                    <p className="text-sm font-medium">{task.title}</p>
-                    <p className="text-xs text-slate-400">
-                      今日の評価：{task.todayRating}
-                    </p>
-                  </div>
-                  <div className="flex gap-2 text-sm">
+                  <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => setRating(task.id, "○")}
-                      className="px-3 py-1 rounded-lg bg-emerald-500/80 hover:bg-emerald-400"
+                      className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm"
                     >
                       ○
                     </button>
                     <button
                       type="button"
                       onClick={() => setRating(task.id, "△")}
-                      className="px-3 py-1 rounded-lg bg-amber-500/80 hover:bg-amber-400"
+                      className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm"
                     >
                       △
                     </button>
                     <button
                       type="button"
                       onClick={() => setRating(task.id, "×")}
-                      className="px-3 py-1 rounded-lg bg-rose-500/80 hover:bg-rose-400"
+                      className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm"
                     >
                       ×
                     </button>
                   </div>
                 </div>
-              ))
-            )}
+              </Card>
+            ))}
           </div>
-        </section>
+        )}
+      </div>
 
-        {/* 今日の試合 */}
-        <section className="space-y-3">
+      {/* 今日の試合 */}
+      <div className="space-y-3">
+        <div className="flex items-end justify-between gap-4">
           <div>
             <h2 className="text-lg font-semibold">今日の試合</h2>
-            <p className="text-xs text-slate-400">({today || "-"})</p>
+            <p className="text-sm text-muted-foreground">（{today || "-"}）</p>
           </div>
+          <Link
+            href="/matches"
+            className="text-sm font-semibold underline-offset-4 hover:underline"
+          >
+            一覧を見る
+          </Link>
+        </div>
 
-          {status !== "ok" ? (
-            <div className="rounded-xl bg-slate-900/80 border border-slate-700 px-4 py-3 text-sm text-slate-400">
+        {status !== "ok" ? (
+          <Card className="p-6">
+            <p className="text-sm text-muted-foreground">
               ログインすると試合が見れるよ
-            </div>
-          ) : matchesStatus === "loading" ? (
-            <div className="rounded-xl bg-slate-900/80 border border-slate-700 px-4 py-3 text-sm text-slate-400">
-              読み込み中...
-            </div>
-          ) : matchesStatus === "error" ? (
-            <div className="rounded-xl bg-slate-900/80 border border-slate-700 px-4 py-3 text-sm text-rose-300">
+            </p>
+          </Card>
+        ) : matchesStatus === "loading" ? (
+          <Card className="p-6">
+            <p className="text-sm text-muted-foreground">読み込み中...</p>
+          </Card>
+        ) : matchesStatus === "error" ? (
+          <Card className="p-6">
+            <p className="text-sm text-muted-foreground">
               /api/matches の取得でエラーが出たかも（コンソール見てね）
-            </div>
-          ) : matches.length === 0 ? (
-            <div className="rounded-xl bg-slate-900/80 border border-slate-700 px-4 py-3 text-sm text-slate-400">
+            </p>
+          </Card>
+        ) : matches.length === 0 ? (
+          <Card className="p-6">
+            <p className="text-sm text-muted-foreground">
               今日の試合はまだないよ
-            </div>
-          ) : (
-            <div className="grid gap-3">
-              {matches.map((m) => (
-                <Link
-                  key={m.id}
-                  href={`/matches/${m.id}`}
-                  className="rounded-xl bg-slate-900/80 border border-slate-700 px-4 py-3"
-                >
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium">
-                      {m.rule ?? "-"} / {m.stage ?? "-"}
-                    </p>
-                    <p className="text-xs">
-                      {m.is_win === null ? "-" : m.is_win ? "WIN" : "LOSE"}
-                    </p>
+            </p>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {matches.map((m) => (
+              <Link key={m.id} href={`/matches/${m.id}`} className="block">
+                <Card className="p-5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-base font-semibold">
+                          {m.rule ?? "-"} / {m.stage ?? "-"}
+                        </p>
+                        <ResultBadge isWin={m.is_win} />
+                      </div>
+
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {m.mode ?? "-"} / {m.weapon ?? "-"}
+                        {m.played_at ? ` · ${formatPlayedAt(m.played_at)}` : ""}
+                      </p>
+                    </div>
+
+                    <span className="text-sm text-muted-foreground">›</span>
                   </div>
-                  <p className="text-xs text-slate-400 mt-1">
-                    {m.mode ?? "-"} / {m.weapon ?? "-"}
-                  </p>
-                </Link>
-              ))}
-            </div>
-          )}
-        </section>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* モーダル */}
       {isAddOpen && (
         <div className="fixed inset-0 z-50">
-          <div className="absolute inset-0 bg-black/60" onClick={closeAdd} />
+          <div className="absolute inset-0 bg-black/50" onClick={closeAdd} />
+
           <div className="absolute inset-0 flex items-center justify-center p-4">
-            <div className="w-full max-w-lg rounded-2xl bg-slate-900 border border-slate-700 p-5 shadow-xl">
+            <div className="w-full max-w-xl rounded-2xl border bg-white p-5 shadow-xl">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <h3 className="text-lg font-semibold">試合を追加</h3>
-                  <p className="text-xs text-slate-400 mt-1">
-                    ※ まずはUIだけ（次でAPIにつなぐ）
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    試合情報と課題評価（○△×）をまとめて保存します
                   </p>
                 </div>
                 <button
                   onClick={closeAdd}
-                  className="rounded-lg px-3 py-1 text-sm bg-slate-800 hover:bg-slate-700"
+                  className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm"
+                  type="button"
                 >
                   閉じる
                 </button>
               </div>
 
-              <form onSubmit={handleSubmit} className="mt-4 space-y-3">
+              <form onSubmit={handleSubmit} className="mt-5 space-y-4">
                 <div className="space-y-1">
-                  <label className="text-xs text-slate-300">日時</label>
+                  <label className="text-sm font-semibold">日時</label>
                   <input
                     type="datetime-local"
                     value={form.played_at}
                     onChange={(e) =>
                       setForm((p) => ({ ...p, played_at: e.target.value }))
                     }
-                    className="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm"
+                    className="w-full rounded-full border bg-white px-4 py-2 text-sm"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs text-slate-300">勝敗</label>
+                  <label className="text-sm font-semibold">勝敗</label>
                   <div className="flex gap-2">
                     <button
                       type="button"
                       onClick={() => setForm((p) => ({ ...p, is_win: "win" }))}
-                      className={`flex-1 rounded-lg px-3 py-2 text-sm border ${
-                        form.is_win === "win"
-                          ? "bg-emerald-500/80 border-emerald-400"
-                          : "bg-slate-950 border-slate-700 hover:bg-slate-800"
+                      className={`flex-1 rounded-full border px-4 py-2 text-sm font-semibold transition hover:shadow-sm ${
+                        form.is_win === "win" ? "bg-emerald-50" : "bg-white"
                       }`}
                     >
                       WIN
@@ -530,10 +569,8 @@ export default function DashboardPage() {
                     <button
                       type="button"
                       onClick={() => setForm((p) => ({ ...p, is_win: "lose" }))}
-                      className={`flex-1 rounded-lg px-3 py-2 text-sm border ${
-                        form.is_win === "lose"
-                          ? "bg-rose-500/80 border-rose-400"
-                          : "bg-slate-950 border-slate-700 hover:bg-slate-800"
+                      className={`flex-1 rounded-full border px-4 py-2 text-sm font-semibold transition hover:shadow-sm ${
+                        form.is_win === "lose" ? "bg-rose-50" : "bg-white"
                       }`}
                     >
                       LOSE
@@ -541,54 +578,54 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div className="space-y-1">
-                    <label className="text-xs text-slate-300">ルール（任意）</label>
+                    <label className="text-sm font-semibold">ルール（任意）</label>
                     <input
                       value={form.rule}
                       onChange={(e) =>
                         setForm((p) => ({ ...p, rule: e.target.value }))
                       }
                       placeholder="エリア / ヤグラ…"
-                      className="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm"
+                      className="w-full rounded-full border bg-white px-4 py-2 text-sm"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs text-slate-300">ステージ（任意）</label>
+                    <label className="text-sm font-semibold">ステージ（任意）</label>
                     <input
                       value={form.stage}
                       onChange={(e) =>
                         setForm((p) => ({ ...p, stage: e.target.value }))
                       }
                       placeholder="ネギトロ…"
-                      className="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm"
+                      className="w-full rounded-full border bg-white px-4 py-2 text-sm"
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div className="space-y-1">
-                    <label className="text-xs text-slate-300">モード（任意）</label>
+                    <label className="text-sm font-semibold">モード（任意）</label>
                     <input
                       value={form.mode}
                       onChange={(e) =>
                         setForm((p) => ({ ...p, mode: e.target.value }))
                       }
                       placeholder="Xマッチ…"
-                      className="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm"
+                      className="w-full rounded-full border bg-white px-4 py-2 text-sm"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs text-slate-300">ブキ（任意）</label>
+                    <label className="text-sm font-semibold">ブキ（任意）</label>
                     <input
                       value={form.weapon}
                       onChange={(e) =>
                         setForm((p) => ({ ...p, weapon: e.target.value }))
                       }
                       placeholder="スプラマニュ…"
-                      className="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm"
+                      className="w-full rounded-full border bg-white px-4 py-2 text-sm"
                     />
                   </div>
                 </div>
@@ -597,54 +634,43 @@ export default function DashboardPage() {
                   <p className="text-sm font-semibold">この試合の課題評価</p>
 
                   {tasks.length === 0 ? (
-                    <div className="rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm text-slate-400">
-                      課題がまだないよ（先に課題を追加してね）
+                    <div className="rounded-2xl border bg-white p-4">
+                      <p className="text-sm text-muted-foreground">
+                        課題がまだないよ（先に課題を追加してね）
+                      </p>
                     </div>
                   ) : (
                     <div className="space-y-2">
                       {tasks.map((task) => (
                         <div
                           key={task.id}
-                          className="flex items-center justify-between rounded-lg bg-slate-950 border border-slate-700 px-3 py-2"
+                          className="flex items-center justify-between rounded-2xl border bg-white p-3"
                         >
-                          <p className="text-sm">{task.title}</p>
+                          <p className="text-sm font-semibold">{task.title}</p>
 
-                          <div className="flex gap-1 text-sm">
+                          <div className="flex items-center gap-2">
                             <button
                               type="button"
                               onClick={() => setRating(task.id, "○")}
-                              className={`px-2 py-1 rounded ${
-                                ratings[task.id] === "○"
-                                  ? "bg-emerald-500/80 border border-emerald-400"
-                                  : "bg-slate-800 hover:bg-slate-700 border border-slate-700"
-                              }`}
+                              className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm"
                             >
                               ○
                             </button>
-
                             <button
                               type="button"
                               onClick={() => setRating(task.id, "△")}
-                              className={`px-2 py-1 rounded ${
-                                ratings[task.id] === "△"
-                                  ? "bg-amber-500/80 border border-amber-400"
-                                  : "bg-slate-800 hover:bg-slate-700 border border-slate-700"
-                              }`}
+                              className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm"
                             >
                               △
                             </button>
-
                             <button
                               type="button"
                               onClick={() => setRating(task.id, "×")}
-                              className={`px-2 py-1 rounded ${
-                                ratings[task.id] === "×"
-                                  ? "bg-rose-500/80 border border-rose-400"
-                                  : "bg-slate-800 hover:bg-slate-700 border border-slate-700"
-                              }`}
+                              className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm"
                             >
                               ×
                             </button>
+                            <RatingBadge rating={ratings[task.id] ?? "-"} />
                           </div>
                         </div>
                       ))}
@@ -656,15 +682,17 @@ export default function DashboardPage() {
                   <button
                     type="button"
                     onClick={closeAdd}
-                    className="flex-1 rounded-lg bg-slate-800 hover:bg-slate-700 px-3 py-2 text-sm"
+                    className="flex-1 inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm"
+                    disabled={isSubmitting}
                   >
                     キャンセル
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 rounded-lg bg-sky-500/80 hover:bg-sky-400 px-3 py-2 text-sm font-medium"
+                    className="flex-1 inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm disabled:opacity-50"
+                    disabled={isSubmitting}
                   >
-                    保存（仮）
+                    {isSubmitting ? "保存中..." : "保存"}
                   </button>
                 </div>
               </form>
@@ -672,6 +700,6 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
-    </main>
+    </div>
   );
 }

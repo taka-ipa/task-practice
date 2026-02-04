@@ -5,6 +5,11 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import api from "@/lib/api";
 
+import { PageHeader } from "@/components/common/PageHeader";
+import { Card } from "@/components/ui/Card";
+import { ResultBadge } from "@/components/ui/ResultBadge";
+import { RatingBadge } from "@/components/ui/RatingBadge";
+
 type Match = {
   id: number;
   played_at: string | null;
@@ -27,6 +32,18 @@ type MatchDetailRes = {
   ratings: Rating[];
 };
 
+function formatPlayedAt(playedAt: string) {
+  const s = playedAt.replace(" ", "T");
+  const d = new Date(s);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleString("ja-JP", {
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 export default function MatchDetailPage() {
   const params = useParams<{ id: string }>();
   const id = params.id;
@@ -43,7 +60,7 @@ export default function MatchDetailPage() {
 
   const playedAtText = useMemo(() => {
     if (!data?.match.played_at) return "-";
-    return new Date(data.match.played_at).toLocaleString();
+    return formatPlayedAt(data.match.played_at);
   }, [data?.match.played_at]);
 
   useEffect(() => {
@@ -53,7 +70,7 @@ export default function MatchDetailPage() {
       try {
         const res = await api.get<MatchDetailRes>(`/api/matches/${id}`);
         setData(res.data);
-        setNoteDraft(res.data.match.note ?? ""); // ✅ ここで初期化
+        setNoteDraft(res.data.match.note ?? "");
         setStatus("ok");
       } catch (e: any) {
         const code = e?.response?.status;
@@ -76,7 +93,6 @@ export default function MatchDetailPage() {
         { note: noteDraft.trim() === "" ? null : noteDraft }
       );
 
-      // dataを更新（match.noteだけ差し替え）
       setData({
         ...data,
         match: { ...data.match, note: res.data.note },
@@ -90,120 +106,185 @@ export default function MatchDetailPage() {
     }
   };
 
-  if (status === "loading") return <div className="p-6">Loading...</div>;
-  if (status === "unauth")
+  /* ------- 状態表示（Cardで統一） ------- */
+  if (status === "loading") {
     return (
-      <div className="p-6">
-        <div className="mb-3">ログインしてね</div>
-        <Link className="underline" href="/login">
-          /loginへ
-        </Link>
+      <div className="space-y-4">
+        <PageHeader title="試合詳細" right={<Link href="/matches" className="underline-offset-4 hover:underline text-sm font-semibold">一覧へ</Link>} />
+        <Card className="p-6">
+          <p className="text-sm text-muted-foreground">読み込み中...</p>
+        </Card>
       </div>
     );
-  if (status === "error" || !data)
+  }
+
+  if (status === "unauth") {
     return (
-      <div className="p-6">
-        <div className="mb-3">読み込み失敗</div>
-        <Link className="underline" href="/matches">
-          一覧へ戻る
-        </Link>
+      <div className="space-y-4">
+        <PageHeader title="試合詳細" description="ログインが必要です" />
+        <Card className="p-6">
+          <p className="text-sm text-muted-foreground">ログインしてね。</p>
+          <div className="mt-4">
+            <Link
+              className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm"
+              href="/login"
+            >
+              /loginへ
+            </Link>
+          </div>
+        </Card>
       </div>
     );
+  }
+
+  if (status === "error" || !data) {
+    return (
+      <div className="space-y-4">
+        <PageHeader title="試合詳細" description="読み込みに失敗しました" />
+        <Card className="p-6">
+          <p className="text-sm text-muted-foreground">
+            データの取得に失敗したかも。
+          </p>
+          <div className="mt-4">
+            <Link
+              className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm"
+              href="/matches"
+            >
+              一覧へ戻る
+            </Link>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   const { match, ratings } = data;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-50 p-6">
-      <div className="max-w-xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold">試合詳細</h1>
-          <Link className="underline" href="/matches">
+    <div className="space-y-6">
+      <PageHeader
+        title="試合詳細"
+        description={match.played_at ? `日時：${playedAtText}` : undefined}
+        right={
+          <Link
+            href="/matches"
+            className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm"
+          >
             一覧へ
           </Link>
-        </div>
+        }
+      />
 
-        <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-2">
-          <div>日時：{playedAtText}</div>
-          <div>ルール：{match.rule ?? "-"}</div>
-          <div>ステージ：{match.stage ?? "-"}</div>
-          <div>モード：{match.mode ?? "-"}</div>
-          <div>武器：{match.weapon ?? "-"}</div>
-          <div>
-            結果：
-            {match.is_win === null ? "-" : match.is_win ? "勝ち" : "負け"}
+      {/* 試合情報 */}
+      <Card className="p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0 space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-base font-semibold">
+                {match.rule ?? "-"} / {match.stage ?? "-"}
+              </p>
+              <ResultBadge isWin={match.is_win} />
+            </div>
+
+            <p className="text-sm text-muted-foreground">
+              {match.mode ?? "-"} / {match.weapon ?? "-"}
+            </p>
+
+            <p className="text-sm text-muted-foreground">
+              日時：{match.played_at ? playedAtText : "-"}
+            </p>
           </div>
+
+          <span className="text-sm text-muted-foreground">›</span>
         </div>
+      </Card>
 
-        {/* ✅ メモ */}
-        <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-2">
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold">メモ</h2>
-
-            {!isEditingNote ? (
-              <button
-                className="underline"
-                onClick={() => setIsEditingNote(true)}
-              >
-                編集
-              </button>
-            ) : (
-              <button
-                className="underline"
-                disabled={savingNote}
-                onClick={() => {
-                  setIsEditingNote(false);
-                  setNoteDraft(match.note ?? "");
-                }}
-              >
-                キャンセル
-              </button>
-            )}
-          </div>
+      {/* メモ */}
+      <Card className="p-5">
+        <div className="flex items-center justify-between gap-4">
+          <h2 className="text-lg font-semibold">メモ</h2>
 
           {!isEditingNote ? (
-            <div className="whitespace-pre-wrap text-sm text-white/80">
-              {match.note && match.note.trim() !== "" ? match.note : "なし"}
-            </div>
+            <button
+              className="text-sm font-semibold underline-offset-4 hover:underline"
+              onClick={() => setIsEditingNote(true)}
+              type="button"
+            >
+              編集
+            </button>
           ) : (
-            <div className="space-y-2">
-              <textarea
-                className="w-full rounded border border-white/10 bg-slate-900 p-2 text-sm"
-                rows={6}
-                value={noteDraft}
-                onChange={(e) => setNoteDraft(e.target.value)}
-              />
+            <button
+              className="text-sm font-semibold underline-offset-4 hover:underline disabled:opacity-50"
+              disabled={savingNote}
+              onClick={() => {
+                setIsEditingNote(false);
+                setNoteDraft(match.note ?? "");
+              }}
+              type="button"
+            >
+              キャンセル
+            </button>
+          )}
+        </div>
 
+        {!isEditingNote ? (
+          <div className="mt-3 whitespace-pre-wrap text-sm text-muted-foreground">
+            {match.note && match.note.trim() !== "" ? match.note : "なし"}
+          </div>
+        ) : (
+          <div className="mt-3 space-y-3">
+            <textarea
+              className="w-full rounded-2xl border bg-white p-3 text-sm"
+              rows={6}
+              value={noteDraft}
+              onChange={(e) => setNoteDraft(e.target.value)}
+            />
+
+            <div className="flex gap-2">
               <button
-                className="rounded border border-white/10 bg-white/10 px-3 py-1 text-sm"
+                className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm disabled:opacity-50"
                 onClick={saveNote}
                 disabled={savingNote}
+                type="button"
               >
                 {savingNote ? "保存中..." : "保存"}
               </button>
+
+              <Link
+                href="/matches"
+                className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm"
+              >
+                一覧へ
+              </Link>
             </div>
-          )}
-        </div>
+          </div>
+        )}
+      </Card>
 
-        <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-          <h2 className="font-semibold mb-3">課題評価（readonly）</h2>
+      {/* 課題評価 */}
+      <Card className="p-5">
+        <h2 className="text-lg font-semibold">課題評価</h2>
 
-          {ratings.length === 0 ? (
-            <div className="text-sm text-white/60">評価なし</div>
-          ) : (
-            <div className="space-y-2">
-              {ratings.map((r) => (
-                <div
-                  key={r.task_id}
-                  className="flex items-center justify-between border-b border-white/10 pb-2 last:border-b-0 last:pb-0"
-                >
-                  <div className="text-sm">{r.title ?? `Task#${r.task_id}`}</div>
-                  <div className="text-lg font-bold">{r.rating}</div>
+        {ratings.length === 0 ? (
+          <p className="mt-3 text-sm text-muted-foreground">評価なし</p>
+        ) : (
+          <div className="mt-4 space-y-3">
+            {ratings.map((r) => (
+              <div
+                key={r.task_id}
+                className="flex items-center justify-between gap-4"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold">
+                    {r.title ?? `Task#${r.task_id}`}
+                  </p>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+                <RatingBadge rating={r.rating} />
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
     </div>
   );
 }
