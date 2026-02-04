@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import api from "@/lib/api";
+
+import { PageHeader } from "@/components/common/PageHeader";
+import { Card } from "@/components/ui/Card";
+import { RatingBadge } from "@/components/ui/RatingBadge";
 
 type Task = {
   id: number;
@@ -21,11 +26,12 @@ type MatchForm = {
   is_win: boolean;
 };
 
+type ApiValidationErrors = Record<string, string[]>;
+
 export default function NewMatchPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loadingTasks, setLoadingTasks] = useState(true);
 
-  // 例：最低限の試合フォーム（必要なければ後で足してOK）
   const [form, setForm] = useState<MatchForm>({
     played_at: "",
     mode: "",
@@ -35,12 +41,11 @@ export default function NewMatchPage() {
     is_win: true,
   });
 
-  // ✅ ratings を Record で持つ
+  // ratings を Record で持つ
   const [ratings, setRatings] = useState<Record<number, Rating>>({});
 
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string>("");
-  type ApiValidationErrors = Record<string, string[]>;
   const [errors, setErrors] = useState<ApiValidationErrors>({});
   const [submittedOnce, setSubmittedOnce] = useState(false);
 
@@ -52,27 +57,7 @@ export default function NewMatchPage() {
         const list: Task[] = res.data?.data ?? res.data; // dataラップどっちでも耐える
         setTasks(list);
 
-        const resetForm = () => {
-          setForm({
-            played_at: "",
-            mode: "",
-            rule: "",
-            stage: "",
-            weapon: "",
-            is_win: true,
-          });
-        
-          // tasks は残ってるので、ratings を "-" に戻す
-          setRatings((prev) => {
-            const next: Record<number, Rating> = {};
-            for (const t of tasks) next[t.id] = "-";
-            return next;
-          });
-
-          setSubmittedOnce(false);
-          setErrors({});
-        };
-        // 初期値：未設定のものは "-" 扱い。stateに全部入れたいならここで埋める
+        // 初期値：未設定のものは "-" 扱い
         setRatings((prev) => {
           const next = { ...prev };
           for (const t of list) {
@@ -92,7 +77,6 @@ export default function NewMatchPage() {
   }, []);
 
   const ratingArray = useMemo(() => {
-    // ✅ Record<number, Rating> → [{task_id, rating}] に変換
     return Object.entries(ratings).map(([taskId, rating]) => ({
       task_id: Number(taskId),
       rating,
@@ -110,7 +94,7 @@ export default function NewMatchPage() {
     });
 
     // tasks は残ってるので、ratings を "-" に戻す
-    setRatings((prev) => {
+    setRatings(() => {
       const next: Record<number, Rating> = {};
       for (const t of tasks) next[t.id] = "-";
       return next;
@@ -137,19 +121,14 @@ export default function NewMatchPage() {
         ratings: ratingArray,
       };
 
-      const res = await api.post("/api/matches-with-ratings", payload);
-      console.log(res.data);
+      await api.post("/api/matches-with-ratings", payload);
       setMessage("保存しました ✅");
-
-      // 保存成功後、フォームをリセット
       resetForm();
     } catch (e: any) {
       console.error(e);
-
-      // 422（バリデーション）を一旦ざっくり出す
       if (e?.response?.status === 422) {
         const apiErrors = e?.response?.data?.errors;
-        setErrors(apiErrors);
+        setErrors(apiErrors ?? {});
         setMessage("入力内容を確認してください");
       } else {
         setMessage("保存に失敗しました");
@@ -164,149 +143,261 @@ export default function NewMatchPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-xl font-bold">試合追加</h1>
+    <div className="space-y-6">
+      <PageHeader
+        title="試合追加"
+        description="試合情報と課題評価（○△×）をまとめて保存します"
+        right={
+          <div className="flex items-center gap-2">
+            <Link
+              href="/matches"
+              className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm"
+            >
+              一覧へ
+            </Link>
+            <Link
+              href="/dashboard"
+              className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm"
+            >
+              ホームへ
+            </Link>
+          </div>
+        }
+      />
 
-      {/* 最低限の試合フォーム */}
-      <div className="space-y-3 rounded-xl border p-4">
-        <div className="flex flex-col gap-2">
-          <label className="text-sm">played_at</label>
-          <input
-            type="datetime-local"
-            value={form.played_at}
-            onChange={(e) => setForm((p) => ({ ...p, played_at: e.target.value }))}
-            className="rounded-md border p-2"
-          />
-          {submittedOnce && !form.played_at && !errors.played_at && (
-            <p className="text-xs text-muted-foreground">
-              試合日時を入力してね（未入力でもOK運用ならこのままでもOK）
-            </p>
-          )}
-        </div>
+      {/* 試合フォーム */}
+      <Card className="p-5">
+        <h2 className="text-lg font-semibold">試合情報</h2>
 
-        <div className="flex gap-3">
-          <div className="flex-1">
-            <label className="text-sm">rule</label>
+        <div className="mt-4 space-y-4">
+          <div className="space-y-1">
+            <label className="text-sm font-semibold">日時</label>
             <input
-              value={form.rule}
-              onChange={(e) => setForm((p) => ({ ...p, rule: e.target.value }))}
-              className="w-full rounded-md border p-2"
-              placeholder="エリア / ヤグラ…"
+              type="datetime-local"
+              value={form.played_at}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, played_at: e.target.value }))
+              }
+              className="w-full rounded-full border bg-white px-4 py-2 text-sm"
             />
-            {submittedOnce && !form.rule && !errors.rule && (
-              <p className="mt-1 text-xs text-muted-foreground">ルールを入力してね</p>
+            {submittedOnce && !form.played_at && !errors.played_at && (
+              <p className="text-xs text-muted-foreground">
+                試合日時を入力してね（未入力でもOK運用ならこのままでもOK）
+              </p>
             )}
           </div>
-          <div className="flex-1">
-            <label className="text-sm">stage</label>
-            <input
-              value={form.stage}
-              onChange={(e) => setForm((p) => ({ ...p, stage: e.target.value }))}
-              className="w-full rounded-md border p-2"
-              placeholder="マップ名"
-            />
-            {submittedOnce && !form.stage && !errors.stage && (
-              <p className="mt-1 text-xs text-muted-foreground">ステージを入力してね</p>
-            )}
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="space-y-1">
+              <label className="text-sm font-semibold">ルール</label>
+              <input
+                value={form.rule}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, rule: e.target.value }))
+                }
+                className="w-full rounded-full border bg-white px-4 py-2 text-sm"
+                placeholder="エリア / ヤグラ…"
+              />
+              {submittedOnce && !form.rule && !errors.rule && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  ルールを入力してね
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-sm font-semibold">ステージ</label>
+              <input
+                value={form.stage}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, stage: e.target.value }))
+                }
+                className="w-full rounded-full border bg-white px-4 py-2 text-sm"
+                placeholder="マップ名"
+              />
+              {submittedOnce && !form.stage && !errors.stage && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  ステージを入力してね
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="space-y-1">
+              <label className="text-sm font-semibold">モード（任意）</label>
+              <input
+                value={form.mode}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, mode: e.target.value }))
+                }
+                className="w-full rounded-full border bg-white px-4 py-2 text-sm"
+                placeholder="Xマッチ…"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-sm font-semibold">ブキ（任意）</label>
+              <input
+                value={form.weapon}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, weapon: e.target.value }))
+                }
+                className="w-full rounded-full border bg-white px-4 py-2 text-sm"
+                placeholder="スプラマニュ…"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-sm font-semibold">勝敗</label>
+            <select
+              value={form.is_win ? "win" : "lose"}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, is_win: e.target.value === "win" }))
+              }
+              className="w-full rounded-full border bg-white px-4 py-2 text-sm"
+            >
+              <option value="win">勝ち</option>
+              <option value="lose">負け</option>
+            </select>
           </div>
         </div>
+      </Card>
 
-        <div className="flex items-center gap-3">
-          <label className="text-sm">勝敗</label>
-          <select
-            value={form.is_win ? "win" : "lose"}
-            onChange={(e) => setForm((p) => ({ ...p, is_win: e.target.value === "win" }))}
-            className="rounded-md border p-2"
-          >
-            <option value="win">勝ち</option>
-            <option value="lose">負け</option>
-          </select>
+      {/* 課題評価 */}
+      <Card className="p-5">
+        <div className="flex items-center justify-between gap-4">
+          <h2 className="text-lg font-semibold">課題評価（○△×）</h2>
+          <span className="text-sm text-muted-foreground">
+            選択中の数：{Object.values(ratings).filter((r) => r !== "-").length}
+          </span>
         </div>
-      </div>
-
-      {/* 課題一覧＋評価 */}
-      <div className="space-y-3 rounded-xl border p-4">
-        <h2 className="font-semibold">課題評価（○△×）</h2>
 
         {loadingTasks ? (
-          <p>読み込み中...</p>
+          <div className="mt-4">
+            <p className="text-sm text-muted-foreground">読み込み中...</p>
+          </div>
+        ) : tasks.length === 0 ? (
+          <div className="mt-4">
+            <p className="text-sm text-muted-foreground">
+              課題がまだないよ（先に課題を追加してね）
+            </p>
+          </div>
         ) : (
-          <div className="space-y-3">
+          <div className="mt-4 space-y-3">
             {tasks.map((t) => (
-              <div key={t.id} className="flex items-center justify-between gap-3">
-                <div>
-                  <div className="font-medium">{t.title}</div>
-                  {t.description && <div className="text-sm opacity-70">{t.description}</div>}
+              <div
+                key={t.id}
+                className="flex flex-col gap-3 rounded-2xl border bg-white p-4 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="min-w-0">
+                  <div className="font-semibold">{t.title}</div>
+                  {t.description ? (
+                    <div className="mt-1 text-sm text-muted-foreground">
+                      {t.description}
+                    </div>
+                  ) : null}
                 </div>
 
-                <div className="flex gap-2">
-                  {(["○", "△", "×", "-"] as Rating[]).map((r) => {
-                    const active = ratings[t.id] === r;
-                    return (
-                      <button
-                        key={r}
-                        type="button"
-                        onClick={() => setTaskRating(t.id, r)}
-                        className={[
-                          "rounded-lg border px-3 py-2 text-sm",
-                          active ? "bg-black text-white" : "bg-white",
-                        ].join(" ")}
-                      >
-                        {r}
-                      </button>
-                    );
-                  })}
+                <div className="flex items-center gap-2">
+                  <div className="flex gap-2">
+                    {(["○", "△", "×", "-"] as Rating[]).map((r) => {
+                      const active = ratings[t.id] === r;
+                      return (
+                        <button
+                          key={r}
+                          type="button"
+                          onClick={() => setTaskRating(t.id, r)}
+                          className={`inline-flex h-10 items-center justify-center rounded-full border px-4 text-sm font-semibold transition hover:shadow-sm ${
+                            active ? "bg-slate-50" : "bg-white"
+                          }`}
+                        >
+                          {r}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <RatingBadge rating={ratings[t.id] ?? "-"} />
                 </div>
               </div>
             ))}
           </div>
         )}
+      </Card>
+
+      {/* 保存エリア */}
+      <div className="space-y-3">
+        {Object.keys(errors).length > 0 && (
+          <Card className="p-5">
+            <p className="font-semibold">入力エラーがあります</p>
+            <ul className="mt-2 list-disc pl-5 text-sm text-muted-foreground">
+              {Object.entries(errors).flatMap(([field, msgs]) =>
+                (msgs ?? []).map((m, i) => (
+                  <li key={`${field}-${i}`}>
+                    {field === "played_at"
+                      ? `played_at: ${m}`
+                      : field === "rule"
+                      ? `rule: ${m}`
+                      : field === "stage"
+                      ? `stage: ${m}`
+                      : field === "is_win"
+                      ? `is_win: ${m}`
+                      : field === "ratings"
+                      ? `ratings: ${m}`
+                      : `${field}: ${m}`}
+                  </li>
+                ))
+              )}
+            </ul>
+          </Card>
+        )}
+
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <button
+            type="button"
+            onClick={onSubmit}
+            disabled={saving || loadingTasks}
+            className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-6 text-sm font-semibold transition hover:shadow-sm disabled:opacity-50"
+          >
+            {saving ? "保存中..." : "保存"}
+          </button>
+
+          <button
+            type="button"
+            onClick={resetForm}
+            disabled={saving}
+            className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-6 text-sm font-semibold transition hover:shadow-sm disabled:opacity-50"
+          >
+            リセット
+          </button>
+
+          <Link
+            href="/matches"
+            className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-6 text-sm font-semibold transition hover:shadow-sm"
+          >
+            一覧へ戻る
+          </Link>
+        </div>
+
+        {message && <p className="text-sm text-muted-foreground">{message}</p>}
       </div>
 
-      {/* 保存 */}
-      <div className="space-y-2">
-        {Object.keys(errors).length > 0 && (
-          <div className="rounded-md border border-red-300 bg-red-50 p-3 text-sm">
-             <p className="font-medium text-red-700">入力エラーがあります</p>
-             <ul className="mt-2 list-disc pl-5 text-red-700">
-               {Object.entries(errors).flatMap(([field, msgs]) =>
-                 msgs.map((m, i) => (
-                   <li key={`${field}-${i}`}>
-                     {field === "played_at" ? `played_at: ${m}` :
-                      field === "rule" ? `rule: ${m}` :
-                      field === "stage" ? `stage: ${m}` :
-                      field === "is_win" ? `is_win: ${m}` :
-                      field === "ratings" ? `ratings: ${m}` :
-                      `${field}: ${m}`}
-                   </li>
-                 ))
-               )}
-             </ul>
-          </div>
-        )}
+      {/* デバッグ（残すならCardで統一） */}
+      <Card className="p-5">
         <button
           type="button"
-          onClick={onSubmit}
-          disabled={saving || loadingTasks}
-          className="rounded-xl bg-black px-4 py-3 text-white disabled:opacity-50"
+          onClick={async () => {
+            const res = await api.get("/api/matches");
+            console.log("matches:", res.data);
+            alert("consoleに出したよ！");
+          }}
+          className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-6 text-sm font-semibold transition hover:shadow-sm"
         >
-          {saving ? "保存中..." : "保存"}
+          （デバッグ）試合一覧を取得してconsole表示
         </button>
-
-        {message && <p className="text-sm">{message}</p>}
-      </div>
-
-      <button
-        type="button"
-        onClick={async () => {
-          const res = await api.get("/api/matches");
-          console.log("matches:", res.data);
-          alert("consoleに出したよ！");
-        }}
-        className="rounded-xl border px-4 py-3"
-      >
-        （デバッグ）試合一覧を取得してconsole表示
-      </button>
+      </Card>
     </div>
   );
 }

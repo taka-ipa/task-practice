@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import api from "@/lib/api";
+import { PageHeader } from "@/components/common/PageHeader";
+import { Card } from "@/components/ui/Card";
+import { ResultBadge } from "@/components/ui/ResultBadge";
 
 type Match = {
   id: number;
@@ -21,6 +24,18 @@ function ymdLocal(d: Date) {
     .slice(0, 10);
 }
 
+function formatPlayedAt(playedAt: string) {
+  const s = playedAt.replace(" ", "T");
+  const d = new Date(s);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleString("ja-JP", {
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 export default function MatchesPage() {
   const [date, setDate] = useState<string>(() => ymdLocal(new Date()));
   const [matches, setMatches] = useState<Match[]>([]);
@@ -32,8 +47,9 @@ export default function MatchesPage() {
     const fetchMatches = async () => {
       setStatus("loading");
       try {
-        // ★ここがポイント：params で date を渡す
-        const res = await api.get<Match[]>("/api/matches", { params: { date } });
+        const res = await api.get<Match[]>("/api/matches", {
+          params: { date },
+        });
         setMatches(res.data);
         setStatus("ok");
       } catch (e: any) {
@@ -53,104 +69,129 @@ export default function MatchesPage() {
     setDate(ymdLocal(d));
   };
 
-  if (status === "unauth")
+  /* ---------- 未ログイン ---------- */
+  if (status === "unauth") {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-50 p-6">
-        <div className="max-w-xl mx-auto">
-          <div className="mb-3">ログインしてね</div>
-          <Link className="underline" href="/login">
-            /loginへ
-          </Link>
-        </div>
+      <div className="space-y-4">
+        <PageHeader title="試合一覧" description="ログインが必要です" />
+        <Card className="p-6">
+          <p className="text-sm text-muted-foreground">ログインしてね。</p>
+          <div className="mt-4">
+            <Link
+              href="/login"
+              className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm"
+            >
+              /loginへ
+            </Link>
+          </div>
+        </Card>
       </div>
     );
+  }
 
+  /* ---------- 通常表示 ---------- */
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-50 p-6">
-      <div className="max-w-xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold">試合一覧（{date}）</h1>
-          <Link className="underline" href="/dashboard">
-            ホームへ
-          </Link>
-        </div>
-
-        {/* 日付切替 */}
-        <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
-          <div className="flex gap-2">
-            <button
-              onClick={setToday}
-              className="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/15"
+    <div className="space-y-6">
+      <PageHeader
+        title={`試合一覧（${date}）`}
+        description="日付を切り替えて試合を確認できます"
+        right={
+          <div className="flex items-center gap-2">
+            <Link
+              href="/dashboard"
+              className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm"
             >
-              今日
-            </button>
-            <button
-              onClick={setYesterday}
-              className="px-3 py-2 rounded-lg bg-white/10 hover:bg-white/15"
+              ホームへ
+            </Link>
+            <Link
+              href="/matches/new"
+              className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm"
             >
-              昨日
-            </button>
+              ＋ 試合追加
+            </Link>
           </div>
+        }
+      />
 
-          <div className="flex items-center gap-3">
-            <div className="text-sm text-white/70">任意日</div>
+      {/* 日付切替 */}
+      <Card className="p-5">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={setToday}
+            className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm"
+          >
+            今日
+          </button>
+          <button
+            onClick={setYesterday}
+            className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm"
+          >
+            昨日
+          </button>
+
+          <div className="ml-auto flex items-center gap-3">
+            <div className="text-sm text-muted-foreground">任意日</div>
             <input
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="bg-slate-900/60 border border-white/10 rounded-lg px-3 py-2"
+              className="h-10 rounded-full border bg-white px-4 text-sm"
             />
           </div>
         </div>
+      </Card>
 
-        {/* 一覧 */}
-        <div className="space-y-3">
-          {status === "loading" && (
-            <div className="text-sm text-white/60">読み込み中…</div>
-          )}
+      {/* 一覧 */}
+      <div className="space-y-4">
+        {status === "loading" && (
+          <Card className="p-6">
+            <p className="text-sm text-muted-foreground">読み込み中…</p>
+          </Card>
+        )}
 
-          {status === "error" && (
-            <div className="rounded-xl border border-red-400/20 bg-red-400/10 p-4">
-              <div className="font-semibold mb-1">読み込み失敗</div>
-              <div className="text-sm text-white/70">
-                /api/matches?date= が叩けてるか Network で見てみて！
-              </div>
-            </div>
-          )}
+        {status === "error" && (
+          <Card className="p-6">
+            <p className="font-semibold">読み込み失敗</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              /api/matches?date= が叩けてるか Network で見てみて！
+            </p>
+          </Card>
+        )}
 
-          {status === "ok" && matches.length === 0 && (
-            <div className="text-sm text-white/60">この日の試合はなし</div>
-          )}
+        {status === "ok" && matches.length === 0 && (
+          <Card className="p-6">
+            <p className="text-sm text-muted-foreground">
+              この日の試合はなし
+            </p>
+          </Card>
+        )}
 
-          {status === "ok" &&
-            matches.map((m) => (
-              <div
-                key={m.id}
-                className="relative rounded-xl border border-white/10 bg-white/5 p-4 flex items-center justify-between"
-              >
-                {/* ★一覧→詳細導線 */}
-                <Link className="absolute inset-0" href={`/matches/${m.id}`}>
-                  詳細
-                </Link>
+        {status === "ok" &&
+          matches.map((m) => (
+            <Link key={m.id} href={`/matches/${m.id}`} className="block">
+              <Card className="p-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-base font-semibold">
+                        {m.rule ?? "-"} / {m.stage ?? "-"}
+                      </p>
+                      <ResultBadge isWin={m.is_win} />
+                    </div>
 
-                <div className="space-y-1">
-                  <div className="text-sm text-white/70">
-                    {m.played_at ? new Date(m.played_at).toLocaleString() : "-"}
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {m.mode ?? "-"} / {m.weapon ?? "-"}
+                      {m.played_at
+                        ? ` · ${formatPlayedAt(m.played_at)}`
+                        : ""}
+                    </p>
                   </div>
-                  <div className="font-medium">
-                    {m.rule ?? "-"} / {m.stage ?? "-"}
-                  </div>
-                  <div className="text-sm text-white/60">
-                    {m.mode ?? "-"} / {m.weapon ?? "-"}
-                  </div>
+
+                  <span className="text-sm text-muted-foreground">›</span>
                 </div>
-
-                <div className="text-lg font-bold">
-                  {m.is_win === null ? "-" : m.is_win ? "WIN" : "LOSE"}
-                </div>
-              </div>
-            ))}
-        </div>
+              </Card>
+            </Link>
+          ))}
       </div>
     </div>
   );
