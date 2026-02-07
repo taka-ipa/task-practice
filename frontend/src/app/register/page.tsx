@@ -122,7 +122,7 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium bg-emerald-500 hover:bg-emerald-400 disabled:opacity-60 disabled:cursor-not-allowed transition mt-4"
+            className="w-full inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium btn btn-primary disabled:opacity-60 disabled:cursor-not-allowed transition mt-4"
           >
             {isSubmitting ? "登録中..." : "アカウントを作成する"}
           </button>
@@ -132,7 +132,7 @@ export default function RegisterPage() {
           すでにアカウントをお持ちの方は{" "}
           <a
             href="/login"
-            className="text-emerald-400 hover:underline"
+            className="text-accent hover:underline"
           >
             ログイン
           </a>

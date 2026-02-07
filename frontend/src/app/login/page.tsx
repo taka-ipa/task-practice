@@ -47,10 +47,10 @@ export default function LoginPage() {
       <PageHeader
         title="ログイン"
         description="登録済みのメールアドレスとパスワードを入力してね。"
-        right={
+          right={
           <Link
             href="/dashboard"
-            className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm"
+            className="inline-flex items-center justify-center rounded-full btn px-4 text-sm font-semibold transition hover:shadow-sm"
           >
             ホームへ
           </Link>
@@ -100,7 +100,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="inline-flex h-10 w-full items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm disabled:opacity-50"
+              className="inline-flex w-full items-center justify-center rounded-full btn btn-primary px-4 text-sm font-semibold transition hover:shadow-sm disabled:opacity-50"
             >
               {loading ? "ログイン中..." : "ログイン"}
             </button>

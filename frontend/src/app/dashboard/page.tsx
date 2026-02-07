@@ -275,7 +275,7 @@ export default function DashboardPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={openAdd}
-              className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm disabled:opacity-50"
+              className="inline-flex items-center justify-center rounded-full btn btn-primary px-4 text-sm font-semibold transition hover:shadow-sm disabled:opacity-50"
               disabled={status !== "ok"}
               type="button"
             >
@@ -283,9 +283,9 @@ export default function DashboardPage() {
             </button>
             <Link
               href="/matches"
-              className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm"
+              className="inline-flex items-center justify-center rounded-full btn px-4 text-sm font-semibold transition hover:shadow-sm"
             >
-              試合一覧へ
+              試合ログへ
             </Link>
           </div>
         }
@@ -426,21 +426,21 @@ export default function DashboardPage() {
                     <button
                       type="button"
                       onClick={() => setRating(task.id, "○")}
-                      className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm"
+                      className="inline-flex items-center justify-center rounded-full btn px-4 text-sm font-semibold transition hover:shadow-sm"
                     >
                       ○
                     </button>
                     <button
                       type="button"
                       onClick={() => setRating(task.id, "△")}
-                      className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm"
+                      className="inline-flex items-center justify-center rounded-full btn px-4 text-sm font-semibold transition hover:shadow-sm"
                     >
                       △
                     </button>
                     <button
                       type="button"
                       onClick={() => setRating(task.id, "×")}
-                      className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm"
+                      className="inline-flex items-center justify-center rounded-full btn px-4 text-sm font-semibold transition hover:shadow-sm"
                     >
                       ×
                     </button>
@@ -463,7 +463,7 @@ export default function DashboardPage() {
             href="/matches"
             className="text-sm font-semibold underline-offset-4 hover:underline"
           >
-            一覧を見る
+            試合ログを見る
           </Link>
         </div>
 
@@ -529,12 +529,12 @@ export default function DashboardPage() {
                 <div>
                   <h3 className="text-lg font-semibold">試合を追加</h3>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    試合情報と課題評価（○△×）をまとめて保存します
+                    試合情報と課題評価（○△×）をまとめて記録します
                   </p>
                 </div>
                 <button
                   onClick={closeAdd}
-                  className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm"
+                  className="inline-flex items-center justify-center rounded-full btn px-4 text-sm font-semibold transition hover:shadow-sm"
                   type="button"
                 >
                   閉じる
@@ -561,7 +561,7 @@ export default function DashboardPage() {
                       type="button"
                       onClick={() => setForm((p) => ({ ...p, is_win: "win" }))}
                       className={`flex-1 rounded-full border px-4 py-2 text-sm font-semibold transition hover:shadow-sm ${
-                        form.is_win === "win" ? "bg-emerald-50" : "bg-white"
+                        form.is_win === "win" ? "badge-ink" : "btn"
                       }`}
                     >
                       WIN
@@ -570,7 +570,7 @@ export default function DashboardPage() {
                       type="button"
                       onClick={() => setForm((p) => ({ ...p, is_win: "lose" }))}
                       className={`flex-1 rounded-full border px-4 py-2 text-sm font-semibold transition hover:shadow-sm ${
-                        form.is_win === "lose" ? "bg-rose-50" : "bg-white"
+                        form.is_win === "lose" ? "badge-salmon" : "btn"
                       }`}
                     >
                       LOSE
@@ -652,21 +652,21 @@ export default function DashboardPage() {
                             <button
                               type="button"
                               onClick={() => setRating(task.id, "○")}
-                              className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm"
+                              className="inline-flex items-center justify-center rounded-full btn px-4 text-sm font-semibold transition hover:shadow-sm"
                             >
                               ○
                             </button>
                             <button
                               type="button"
                               onClick={() => setRating(task.id, "△")}
-                              className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm"
+                              className="inline-flex items-center justify-center rounded-full btn px-4 text-sm font-semibold transition hover:shadow-sm"
                             >
                               △
                             </button>
                             <button
                               type="button"
                               onClick={() => setRating(task.id, "×")}
-                              className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm"
+                              className="inline-flex items-center justify-center rounded-full btn px-4 text-sm font-semibold transition hover:shadow-sm"
                             >
                               ×
                             </button>
@@ -682,17 +682,17 @@ export default function DashboardPage() {
                   <button
                     type="button"
                     onClick={closeAdd}
-                    className="flex-1 inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm"
+                    className="flex-1 inline-flex items-center justify-center rounded-full btn px-4 text-sm font-semibold transition hover:shadow-sm"
                     disabled={isSubmitting}
                   >
                     キャンセル
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm disabled:opacity-50"
+                    className="flex-1 inline-flex items-center justify-center rounded-full btn btn-primary px-4 text-sm font-semibold transition hover:shadow-sm disabled:opacity-50"
                     disabled={isSubmitting}
                   >
-                    {isSubmitting ? "保存中..." : "保存"}
+                    {isSubmitting ? "試合を記録中..." : "試合を記録"}
                   </button>
                 </div>
               </form>
