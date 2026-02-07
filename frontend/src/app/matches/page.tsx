@@ -73,16 +73,16 @@ export default function MatchesPage() {
   if (status === "unauth") {
     return (
       <div className="space-y-4">
-        <PageHeader title="試合一覧" description="ログインが必要です" />
+        <PageHeader title="試合ログ" description="ログインが必要です" />
         <Card className="p-6">
           <p className="text-sm text-muted-foreground">ログインしてね。</p>
           <div className="mt-4">
             <Link
-              href="/login"
-              className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm"
-            >
-              /loginへ
-            </Link>
+                href="/login"
+                className="inline-flex items-center justify-center rounded-full btn btn-primary px-4 text-sm font-semibold transition hover:shadow-sm"
+              >
+                /loginへ
+              </Link>
           </div>
         </Card>
       </div>
@@ -93,19 +93,19 @@ export default function MatchesPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={`試合一覧（${date}）`}
+        title={`試合ログ（${date}）`}
         description="日付を切り替えて試合を確認できます"
         right={
           <div className="flex items-center gap-2">
-            <Link
+                <Link
               href="/dashboard"
-              className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm"
+              className="inline-flex items-center justify-center rounded-full btn px-4 text-sm font-semibold transition hover:shadow-sm"
             >
               ホームへ
             </Link>
             <Link
               href="/matches/new"
-              className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm"
+              className="inline-flex items-center justify-center rounded-full btn btn-primary px-4 text-sm font-semibold transition hover:shadow-sm"
             >
               ＋ 試合追加
             </Link>
@@ -118,13 +118,13 @@ export default function MatchesPage() {
         <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={setToday}
-            className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm"
+            className="btn px-4 text-sm font-semibold transition hover:shadow-sm"
           >
             今日
           </button>
           <button
             onClick={setYesterday}
-            className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm"
+            className="btn px-4 text-sm font-semibold transition hover:shadow-sm"
           >
             昨日
           </button>

@@ -3,10 +3,10 @@ import { cn } from "@/lib/utils";
 type Rating = "○" | "△" | "×" | "-";
 
 const styles: Record<Rating, string> = {
-  "○": "bg-emerald-100 text-emerald-700",
-  "△": "bg-amber-100 text-amber-700",
-  "×": "bg-rose-100 text-rose-700",
-  "-": "bg-slate-100 text-slate-600",
+  "○": "rating-yes",
+  "△": "rating-neutral",
+  "×": "rating-no",
+  "-": "rating-empty",
 };
 
 export function RatingBadge({
@@ -19,7 +19,7 @@ export function RatingBadge({
   return (
     <span
       className={cn(
-        "inline-flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold",
+        "badge",
         styles[rating],
         className
       )}

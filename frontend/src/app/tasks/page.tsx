@@ -111,7 +111,7 @@ export default function TasksPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="px-4 py-2 rounded-lg bg-emerald-500/80 hover:bg-emerald-400 disabled:opacity-50 text-sm font-medium"
+              className="px-4 py-2 rounded-lg btn btn-primary disabled:opacity-50 text-sm font-medium"
             >
               {submitting ? "追加中..." : "追加"}
             </button>

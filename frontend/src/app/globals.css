@@ -3,6 +3,19 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Palette */
+  --ink: #0b3d91; /* インクブルー（メイン） */
+  --ink-foreground: #ffffff;
+  --ink-100: #e9eefb;
+
+  --salmon: #ff6b6b; /* サーモンピンク（アクセント） */
+  --salmon-foreground: #ffffff;
+  --salmon-100: #fff0f0;
+
+  --muted-foreground: #64748b; /* グレー系テキスト */
+  --border: #e6e9ee;
+  --motion-duration: 180ms;
 }
 
 @theme inline {
@@ -23,4 +36,113 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Buttons / Badges / Emphasis - keep color usage to these elements */
+.btn {
+  display: inline-flex;
+  height: 2.5rem; /* h-10 */
+  align-items: center;
+  justify-content: center;
+  padding: 0 1rem;
+  border-radius: 9999px;
+  background: #ffffff;
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: transform var(--motion-duration) ease, box-shadow var(--motion-duration) ease, filter var(--motion-duration) ease;
+}
+
+.btn-primary {
+  background: var(--ink);
+  color: var(--ink-foreground);
+  border: 1px solid transparent;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(16, 24, 40, 0.06);
+}
+
+.btn-primary:hover {
+  filter: brightness(0.95);
+}
+
+.badge-ink {
+  background: var(--ink-100);
+  color: var(--ink);
+}
+
+.badge-salmon {
+  background: var(--salmon-100);
+  color: var(--salmon);
+}
+
+.rating-yes {
+  background: var(--ink-100);
+  color: var(--ink);
+}
+.rating-no {
+  background: var(--salmon-100);
+  color: var(--salmon);
+}
+.rating-neutral {
+  background: #f8fafc;
+  color: var(--muted-foreground);
+}
+.rating-empty {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.text-muted-foreground {
+  color: var(--muted-foreground) !important;
+}
+
+.text-accent {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* Card base to keep cards neutral and consistent */
+.card {
+  border-radius: 1rem;
+  border: 1px solid var(--border);
+  background: var(--background);
+}
+
+/* Card hover subtle lift */
+.card {
+  transition: box-shadow var(--motion-duration) ease, transform var(--motion-duration) ease;
+}
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(16, 24, 40, 0.06);
+}
+
+/* Common circular badge for ratings */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 1.75rem; /* h-7 */
+  width: 1.75rem; /* w-7 */
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+  transition: box-shadow var(--motion-duration) ease, transform var(--motion-duration) ease, background-color var(--motion-duration) ease;
+}
+
+/* Result badges (pill) */
+.result-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  transition: background-color var(--motion-duration) ease, transform var(--motion-duration) ease;
 }

@@ -122,7 +122,7 @@ export default function NewMatchPage() {
       };
 
       await api.post("/api/matches-with-ratings", payload);
-      setMessage("保存しました ✅");
+      setMessage("試合を記録しました ✅");
       resetForm();
     } catch (e: any) {
       console.error(e);
@@ -131,7 +131,7 @@ export default function NewMatchPage() {
         setErrors(apiErrors ?? {});
         setMessage("入力内容を確認してください");
       } else {
-        setMessage("保存に失敗しました");
+        setMessage("試合の記録に失敗しました");
       }
     } finally {
       setSaving(false);
@@ -146,18 +146,18 @@ export default function NewMatchPage() {
     <div className="space-y-6">
       <PageHeader
         title="試合追加"
-        description="試合情報と課題評価（○△×）をまとめて保存します"
+        description="試合情報と課題評価（○△×）をまとめて記録します"
         right={
           <div className="flex items-center gap-2">
             <Link
               href="/matches"
-              className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm"
+              className="inline-flex items-center justify-center rounded-full btn px-4 text-sm font-semibold transition hover:shadow-sm"
             >
-              一覧へ
+              試合ログへ
             </Link>
             <Link
               href="/dashboard"
-              className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-4 text-sm font-semibold transition hover:shadow-sm"
+              className="inline-flex items-center justify-center rounded-full btn px-4 text-sm font-semibold transition hover:shadow-sm"
             >
               ホームへ
             </Link>
@@ -359,25 +359,25 @@ export default function NewMatchPage() {
             type="button"
             onClick={onSubmit}
             disabled={saving || loadingTasks}
-            className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-6 text-sm font-semibold transition hover:shadow-sm disabled:opacity-50"
+            className="inline-flex items-center justify-center rounded-full btn btn-primary px-6 text-sm font-semibold transition hover:shadow-sm disabled:opacity-50"
           >
-            {saving ? "保存中..." : "保存"}
+            {saving ? "試合を記録中..." : "試合を記録"}
           </button>
 
           <button
             type="button"
             onClick={resetForm}
             disabled={saving}
-            className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-6 text-sm font-semibold transition hover:shadow-sm disabled:opacity-50"
+            className="inline-flex items-center justify-center rounded-full btn px-6 text-sm font-semibold transition hover:shadow-sm disabled:opacity-50"
           >
             リセット
           </button>
 
           <Link
             href="/matches"
-            className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-6 text-sm font-semibold transition hover:shadow-sm"
+            className="inline-flex items-center justify-center rounded-full btn px-6 text-sm font-semibold transition hover:shadow-sm"
           >
-            一覧へ戻る
+            試合ログへ戻る
           </Link>
         </div>
 
@@ -393,9 +393,9 @@ export default function NewMatchPage() {
             console.log("matches:", res.data);
             alert("consoleに出したよ！");
           }}
-          className="inline-flex h-10 items-center justify-center rounded-full border bg-white px-6 text-sm font-semibold transition hover:shadow-sm"
+          className="inline-flex items-center justify-center rounded-full btn px-6 text-sm font-semibold transition hover:shadow-sm"
         >
-          （デバッグ）試合一覧を取得してconsole表示
+          （デバッグ）試合ログを取得してconsole表示
         </button>
       </Card>
     </div>
