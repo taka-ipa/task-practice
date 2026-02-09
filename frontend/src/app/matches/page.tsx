@@ -39,18 +39,21 @@ function formatPlayedAt(playedAt: string) {
 export default function MatchesPage() {
   const [date, setDate] = useState<string>(() => ymdLocal(new Date()));
   const [matches, setMatches] = useState<Match[]>([]);
-  const [status, setStatus] = useState<"loading" | "ok" | "unauth" | "error">(
-    "loading"
-  );
+  const [status, setStatus] = useState<"loading" | "ok" | "unauth" | "error">("loading");
+  const [page, setPage] = useState<number>(1);
+  const [perPage] = useState<number>(5);
+  const [lastPage, setLastPage] = useState<number>(1);
 
   useEffect(() => {
     const fetchMatches = async () => {
       setStatus("loading");
       try {
-        const res = await api.get<Match[]>("/api/matches", {
-          params: { date },
+        const res = await api.get("/api/matches", {
+          params: { date, page, per_page: perPage },
         });
-        setMatches(res.data);
+        // Laravel の paginator は data, current_page, last_page などを返す
+        setMatches(res.data.data ?? []);
+        setLastPage(res.data.last_page ?? 1);
         setStatus("ok");
       } catch (e: any) {
         const code = e?.response?.status;
@@ -60,13 +63,14 @@ export default function MatchesPage() {
     };
 
     fetchMatches();
-  }, [date]);
+  }, [date, page, perPage]);
 
   const setToday = () => setDate(ymdLocal(new Date()));
   const setYesterday = () => {
     const d = new Date();
     d.setDate(d.getDate() - 1);
     setDate(ymdLocal(d));
+    setPage(1);
   };
 
   /* ---------- 未ログイン ---------- */
@@ -134,7 +138,10 @@ export default function MatchesPage() {
             <input
               type="date"
               value={date}
-              onChange={(e) => setDate(e.target.value)}
+              onChange={(e) => {
+                setDate(e.target.value);
+                setPage(1);
+              }}
               className="h-10 rounded-full border bg-white px-4 text-sm"
             />
           </div>
@@ -192,6 +199,27 @@ export default function MatchesPage() {
               </Card>
             </Link>
           ))}
+
+        {/* ページネーションコントロール */}
+        <div className="flex items-center justify-center gap-4">
+          <button
+            className="btn px-4 text-sm"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page <= 1}
+          >
+            前へ
+          </button>
+          <div className="text-sm text-muted-foreground">
+            {page} / {lastPage}
+          </div>
+          <button
+            className="btn btn-primary px-4 text-sm"
+            onClick={() => setPage((p) => Math.min(lastPage, p + 1))}
+            disabled={page >= lastPage}
+          >
+            次へ
+          </button>
+        </div>
       </div>
     </div>
   );

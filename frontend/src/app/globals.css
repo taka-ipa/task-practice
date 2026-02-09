@@ -25,6 +25,55 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Responsive base & utilities */
+html { box-sizing: border-box; font-size: clamp(14px, 2vw, 18px); }
+*, *::before, *::after { box-sizing: inherit; }
+
+:root {
+  --site-max-width: 1024px;
+  --container-padding: 1rem;
+  --card-padding: 1rem;
+}
+
+.container {
+  max-width: var(--site-max-width);
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 var(--container-padding);
+}
+
+/* Make media and images responsive so they don't overflow on small screens */
+img, video, svg { max-width: 100%; height: auto; display: block; }
+
+/* Small screen tweaks (iPhone SE 375px and smaller) */
+@media (max-width: 375px) {
+  :root { --container-padding: 0.75rem; --card-padding: 0.75rem; }
+
+  /* prevent button text from overflowing on very small screens */
+  .btn {
+    height: 2.25rem;
+    padding: 0 0.75rem;
+    font-size: 0.8125rem;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .btn .icon { display: none; }
+
+  .badge { height: 1.5rem; width: 1.5rem; font-size: 0.7rem; }
+  .result-badge { padding: 0.2rem 0.5rem; font-size: 0.6875rem; }
+
+  .card { padding: var(--card-padding); border-radius: 0.75rem; }
+}
+
+/* Medium screens (phones in landscape / small tablets) */
+@media (min-width: 376px) and (max-width: 768px) {
+  :root { --container-padding: 0.875rem; }
+  .btn { padding: 0 0.9rem; }
+  .card { padding: calc(var(--card-padding) * 1.0); }
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
@@ -41,6 +90,12 @@ body {
 /* Buttons / Badges / Emphasis - keep color usage to these elements */
 .btn {
   display: inline-flex;
+  min-width: 0;
+  flex-shrink: 1;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   height: 2.5rem; /* h-10 */
   align-items: center;
   justify-content: center;

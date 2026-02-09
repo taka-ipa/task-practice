@@ -11,7 +11,7 @@ class MatchController extends Controller
 {
     public function index(Request $request)
     {
-        $user = $request->user();
+        $user = $request->user(); 
 
         // ?date=YYYY-MM-DD（無ければ直近を返す）
         $date = $request->query('date'); // null あり
@@ -28,20 +28,25 @@ class MatchController extends Controller
                 'is_win',
             ]);
 
-        if ($date) {
-            // 指定日の 00:00:00〜23:59:59（日本時間想定）
-            $start = Carbon::parse($date)->startOfDay()->subHours(9);
-            $end = Carbon::parse($date)->endOfDay()->subHours(9);
+        // ページネーション対応: `page` と `per_page` クエリを受け取る
+        $perPage = (int) $request->query('per_page', 5);
+        $perPage = max(1, min(100, $perPage));
 
-            $query->whereBetween('played_at', [$start, $end])
-                  ->orderByDesc('played_at');
+        if ($date) {
+            // JSTの 00:00:00〜23:59:59 をそのままDBのdatetimeと比較する
+            $start = Carbon::parse($date, 'Asia/Tokyo')->startOfDay();
+            $end   = Carbon::parse($date, 'Asia/Tokyo')->endOfDay();
+
+            $query->whereBetween('played_at', [
+                $start->format('Y-m-d H:i:s'),
+                $end->format('Y-m-d H:i:s'),
+            ])->orderByDesc('played_at');
         } else {
-            // dateが無い場合は直近20件
-            $query->orderBy('played_at', 'desc')->limit(20);
+            $query->orderByDesc('played_at');
         }
 
-        $matches = $query->get();
-        
+        $matches = $query->paginate($perPage);
+
         return response()->json($matches);
     }
 
