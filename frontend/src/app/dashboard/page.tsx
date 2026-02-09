@@ -523,8 +523,8 @@ export default function DashboardPage() {
         <div className="fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black/50" onClick={closeAdd} />
 
-          <div className="absolute inset-0 flex items-center justify-center p-4">
-            <div className="w-full max-w-xl rounded-2xl border bg-white p-5 shadow-xl">
+          <div className="absolute inset-0 flex items-center justify-center p-4 overflow-y-auto">
+            <div className="w-full max-w-xl rounded-2xl border bg-white p-5 shadow-xl max-h-[90vh] overflow-y-auto">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <h3 className="text-lg font-semibold">試合を追加</h3>
