@@ -251,16 +251,27 @@ export default function NewMatchPage() {
 
           <div className="space-y-1">
             <label className="text-sm font-semibold">勝敗</label>
-            <select
-              value={form.is_win ? "win" : "lose"}
-              onChange={(e) =>
-                setForm((p) => ({ ...p, is_win: e.target.value === "win" }))
-              }
-              className="w-full rounded-full border bg-white px-4 py-2 text-sm"
-            >
-              <option value="win">勝ち</option>
-              <option value="lose">負け</option>
-            </select>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setForm((p) => ({ ...p, is_win: true }))}
+                className={`inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold border transition hover:shadow-sm ${
+                  form.is_win ? "badge-ink" : "btn"
+                }`}
+              >
+                WIN
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setForm((p) => ({ ...p, is_win: false }))}
+                className={`inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold border transition hover:shadow-sm ${
+                  !form.is_win ? "badge-salmon" : "btn"
+                }`}
+              >
+                LOSE
+              </button>
+            </div>
           </div>
         </div>
       </Card>

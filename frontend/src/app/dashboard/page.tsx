@@ -152,10 +152,11 @@ export default function DashboardPage() {
     if (!today) return;
     try {
       setMatchesStatus("loading");
-      const res = await api.get<Match[]>("/api/matches", {
-        params: { date: today },
+      const res = await api.get("/api/matches", {
+        params: { date: today, per_page: 5, page: 1 },
       });
-      setMatches(res.data);
+      // API は paginator を返すため data を使う
+      setMatches(res.data.data ?? []);
       setMatchesStatus("ok");
     } catch (e) {
       console.error("api/matches エラー:", e);
