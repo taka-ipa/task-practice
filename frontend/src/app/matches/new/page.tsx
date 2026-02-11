@@ -7,6 +7,9 @@ import api from "@/lib/api";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { RatingBadge } from "@/components/ui/RatingBadge";
+import StageSelector from "@/components/StageSelector";
+import RuleSelector from "@/components/RuleSelector";
+import ModeSelector from "@/components/ModeSelector";
 
 type Task = {
   id: number;
@@ -190,30 +193,26 @@ export default function NewMatchPage() {
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1">
               <label className="text-sm font-semibold">ルール</label>
-              <input
+              <RuleSelector
                 value={form.rule}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, rule: e.target.value }))
-                }
-                className="w-full rounded-full border bg-white px-4 py-2 text-sm"
+                onChange={(v) => setForm((p) => ({ ...p, rule: v }))}
                 placeholder="エリア / ヤグラ…"
+                className="w-full"
               />
               {submittedOnce && !form.rule && !errors.rule && (
                 <p className="mt-1 text-xs text-muted-foreground">
-                  ルールを入力してね
+                  ルールを選んでね
                 </p>
               )}
             </div>
 
             <div className="space-y-1">
               <label className="text-sm font-semibold">ステージ</label>
-              <input
+              <StageSelector
                 value={form.stage}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, stage: e.target.value }))
-                }
-                className="w-full rounded-full border bg-white px-4 py-2 text-sm"
+                onChange={(v) => setForm((p) => ({ ...p, stage: v }))}
                 placeholder="マップ名"
+                className="w-full"
               />
               {submittedOnce && !form.stage && !errors.stage && (
                 <p className="mt-1 text-xs text-muted-foreground">
@@ -226,13 +225,11 @@ export default function NewMatchPage() {
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1">
               <label className="text-sm font-semibold">モード（任意）</label>
-              <input
+              <ModeSelector
                 value={form.mode}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, mode: e.target.value }))
-                }
-                className="w-full rounded-full border bg-white px-4 py-2 text-sm"
+                onChange={(v) => setForm((p) => ({ ...p, mode: v }))}
                 placeholder="Xマッチ…"
+                className="w-full"
               />
             </div>
 

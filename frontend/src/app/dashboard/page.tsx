@@ -8,6 +8,9 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { ResultBadge } from "@/components/ui/ResultBadge";
 import { RatingBadge } from "@/components/ui/RatingBadge";
+import StageSelector from "@/components/StageSelector";
+import RuleSelector from "@/components/RuleSelector";
+import ModeSelector from "@/components/ModeSelector";
 
 type User = {
   id: number;
@@ -615,25 +618,21 @@ export default function DashboardPage() {
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div className="space-y-1">
                     <label className="text-sm font-semibold">ルール（任意）</label>
-                    <input
+                    <RuleSelector
                       value={form.rule}
-                      onChange={(e) =>
-                        setForm((p) => ({ ...p, rule: e.target.value }))
-                      }
+                      onChange={(v) => setForm((p) => ({ ...p, rule: v }))}
                       placeholder="エリア / ヤグラ…"
-                      className="w-full rounded-full border bg-white px-4 py-2 text-sm"
+                      className="w-full"
                     />
                   </div>
 
                   <div className="space-y-1">
                     <label className="text-sm font-semibold">ステージ（任意）</label>
-                    <input
+                    <StageSelector
                       value={form.stage}
-                      onChange={(e) =>
-                        setForm((p) => ({ ...p, stage: e.target.value }))
-                      }
+                      onChange={(v) => setForm((p) => ({ ...p, stage: v }))}
                       placeholder="ネギトロ…"
-                      className="w-full rounded-full border bg-white px-4 py-2 text-sm"
+                      className="w-full"
                     />
                   </div>
                 </div>
@@ -641,13 +640,11 @@ export default function DashboardPage() {
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div className="space-y-1">
                     <label className="text-sm font-semibold">モード（任意）</label>
-                    <input
+                    <ModeSelector
                       value={form.mode}
-                      onChange={(e) =>
-                        setForm((p) => ({ ...p, mode: e.target.value }))
-                      }
+                      onChange={(v) => setForm((p) => ({ ...p, mode: v }))}
                       placeholder="Xマッチ…"
-                      className="w-full rounded-full border bg-white px-4 py-2 text-sm"
+                      className="w-full"
                     />
                   </div>
 
