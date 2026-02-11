@@ -40,6 +40,13 @@ type Match = {
   is_win: boolean | null;
 };
 
+// 汎用ページネーション型（API が { data: T, meta?:..., links?:... } を返す想定）
+type Paginated<T> = {
+  data: T;
+  meta?: any;
+  links?: any;
+};
+
 type MatchForm = {
   played_at: string; // datetime-local 用（YYYY-MM-DDTHH:mm）
   rule: string;
@@ -98,6 +105,17 @@ export default function DashboardPage() {
     );
   };
 
+  const handleDelete = async (taskId: number) => {
+    if (!confirm("課題を削除しますか？ この操作は取り消せません。")) return;
+    try {
+      await api.delete(`/api/tasks/${taskId}`);
+      setTasks((prev) => prev.filter((t) => t.id !== taskId));
+    } catch (e) {
+      console.error("課題削除エラー:", e);
+      alert("削除に失敗しました");
+    }
+  };
+
   const [matches, setMatches] = useState<Match[]>([]);
   const [matchesStatus, setMatchesStatus] = useState<
     "idle" | "loading" | "ok" | "error"
@@ -152,7 +170,7 @@ export default function DashboardPage() {
     if (!today) return;
     try {
       setMatchesStatus("loading");
-      const res = await api.get("/api/matches", {
+      const res = await api.get<Paginated<Match[]>>("/api/matches", {
         params: { date: today, per_page: 5, page: 1 },
       });
       // API は paginator を返すため data を使う
@@ -402,7 +420,15 @@ export default function DashboardPage() {
 
       {/* 課題 */}
       <div className="space-y-3">
-        <h2 className="text-lg font-semibold">課題</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">課題</h2>
+          <Link
+            href="/tasks"
+            className="inline-flex items-center justify-center rounded-full btn px-3 py-1 text-sm font-semibold transition hover:shadow-sm"
+          >
+            課題を追加・編集
+          </Link>
+        </div>
 
         {tasks.length === 0 ? (
           <Card className="p-6">
@@ -444,6 +470,13 @@ export default function DashboardPage() {
                       className="inline-flex items-center justify-center rounded-full btn px-4 text-sm font-semibold transition hover:shadow-sm"
                     >
                       ×
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(task.id)}
+                      className="inline-flex items-center justify-center rounded-full btn btn-danger px-3 text-sm font-semibold transition"
+                    >
+                      削除
                     </button>
                   </div>
                 </div>

@@ -124,6 +124,16 @@ body {
   filter: brightness(0.95);
 }
 
+/* Danger button for destructive actions */
+.btn-danger {
+  background: transparent;
+  color: var(--salmon);
+  border: 1px solid rgba(255, 107, 107, 0.15);
+}
+.btn-danger:hover {
+  background: var(--salmon-100);
+}
+
 .badge-ink {
   background: var(--ink-100);
   color: var(--ink);

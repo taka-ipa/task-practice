@@ -294,6 +294,14 @@ export default function NewMatchPage() {
             <p className="text-sm text-muted-foreground">
               課題がまだないよ（先に課題を追加してね）
             </p>
+            <div className="mt-2">
+              <Link
+                href="/tasks"
+                className="inline-flex items-center rounded-full btn px-3 py-1 text-sm font-semibold transition hover:shadow-sm"
+              >
+                課題ページへ（追加・編集）
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="mt-4 space-y-3">

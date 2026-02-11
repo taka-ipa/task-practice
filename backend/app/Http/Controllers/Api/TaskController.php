@@ -41,4 +41,21 @@ class TaskController extends Controller
 
         return response()->json($task, 201);
     }
+
+    /**
+     * 指定した課題を削除する（所有者のみ）
+     */
+    public function destroy(Request $request, Task $task)
+    {
+        $user = $request->user();
+
+        // 所有者チェック
+        if ($task->user_id !== $user->id) {
+            return response()->json(['message' => 'Not found'], 404);
+        }
+
+        $task->delete();
+
+        return response()->json(null, 204);
+    }
 }
