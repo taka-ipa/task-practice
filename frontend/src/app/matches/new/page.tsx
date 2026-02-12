@@ -10,6 +10,7 @@ import { RatingBadge } from "@/components/ui/RatingBadge";
 import StageSelector from "@/components/StageSelector";
 import RuleSelector from "@/components/RuleSelector";
 import ModeSelector from "@/components/ModeSelector";
+import WeaponSelector from "@/components/WeaponSelector";
 
 type Task = {
   id: number;
@@ -235,13 +236,11 @@ export default function NewMatchPage() {
 
             <div className="space-y-1">
               <label className="text-sm font-semibold">ブキ（任意）</label>
-              <input
+              <WeaponSelector
                 value={form.weapon}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, weapon: e.target.value }))
-                }
-                className="w-full rounded-full border bg-white px-4 py-2 text-sm"
+                onChange={(v) => setForm((p) => ({ ...p, weapon: v }))}
                 placeholder="スプラマニュ…"
+                className="w-full"
               />
             </div>
           </div>
