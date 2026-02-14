@@ -87,6 +87,28 @@ export default function NewMatchPage() {
     }));
   }, [ratings]);
 
+  const taskIndexMap = useMemo(() => {
+    const map: Record<number, number> = {};
+    ratingArray.forEach((r, i) => {
+      map[r.task_id] = i;
+    });
+    return map;
+  }, [ratingArray]);
+
+  const getFieldErrors = (field: string) => {
+    return (errors && errors[field]) || [];
+  };
+
+  const getRatingsErrors = () => {
+    const msgs: string[] = [];
+    for (const [k, v] of Object.entries(errors)) {
+      if (k.startsWith("ratings")) {
+        msgs.push(...(v ?? []));
+      }
+    }
+    return msgs;
+  };
+
   const resetForm = () => {
     setForm({
       played_at: "",
@@ -184,11 +206,18 @@ export default function NewMatchPage() {
               }
               className="w-full rounded-full border bg-white px-4 py-2 text-sm"
             />
-            {submittedOnce && !form.played_at && !errors.played_at && (
+            {getFieldErrors("played_at").length > 0 ? (
+              // API のメッセージは言語が混在する可能性があるため、日本語の定型文を表示
+              getFieldErrors("played_at").map((_, i) => (
+                <p key={i} className="mt-1 text-xs text-red-600 break-words whitespace-normal">
+                  試合日時を入力してください
+                </p>
+              ))
+            ) : submittedOnce && !form.played_at ? (
               <p className="text-xs text-muted-foreground">
                 試合日時を入力してね（未入力でもOK運用ならこのままでもOK）
               </p>
-            )}
+            ) : null}
           </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -200,11 +229,15 @@ export default function NewMatchPage() {
                 placeholder="エリア / ヤグラ…"
                 className="w-full"
               />
-              {submittedOnce && !form.rule && !errors.rule && (
-                <p className="mt-1 text-xs text-muted-foreground">
-                  ルールを選んでね
-                </p>
-              )}
+              {getFieldErrors("rule").length > 0 ? (
+                getFieldErrors("rule").map((_, i) => (
+                  <p key={i} className="mt-1 text-xs text-red-600 break-words whitespace-normal">
+                    ルールを選択してください
+                  </p>
+                ))
+              ) : submittedOnce && !form.rule ? (
+                <p className="mt-1 text-xs text-muted-foreground">ルールを選んでね</p>
+              ) : null}
             </div>
 
             <div className="space-y-1">
@@ -215,11 +248,15 @@ export default function NewMatchPage() {
                 placeholder="マップ名"
                 className="w-full"
               />
-              {submittedOnce && !form.stage && !errors.stage && (
-                <p className="mt-1 text-xs text-muted-foreground">
-                  ステージを入力してね
-                </p>
-              )}
+              {getFieldErrors("stage").length > 0 ? (
+                getFieldErrors("stage").map((_, i) => (
+                  <p key={i} className="mt-1 text-xs text-red-600 break-words whitespace-normal">
+                    ステージ名を入力してください
+                  </p>
+                ))
+              ) : submittedOnce && !form.stage ? (
+                <p className="mt-1 text-xs text-muted-foreground">ステージを入力してね</p>
+              ) : null}
             </div>
           </div>
 
@@ -301,21 +338,45 @@ export default function NewMatchPage() {
           </div>
         ) : (
           <div className="mt-4 space-y-3">
+            {getRatingsErrors().length > 0 && (
+              <div className="text-sm text-red-600 break-words whitespace-normal">
+                {getRatingsErrors().map((_, i) => (
+                  <div key={i} className="mt-1 max-w-full break-words whitespace-normal">課題の評価を入力してください</div>
+                ))}
+              </div>
+            )}
             {tasks.map((t) => (
               <div
                 key={t.id}
                 className="flex flex-col gap-3 rounded-2xl border bg-white p-4 sm:flex-row sm:items-center sm:justify-between"
               >
-                <div className="min-w-0">
-                  <div className="font-semibold">{t.title}</div>
-                  {t.description ? (
-                    <div className="mt-1 text-sm text-muted-foreground">
-                      {t.description}
-                    </div>
-                  ) : null}
-                </div>
+                <div className="flex-1 min-w-0">
+                    <div className="font-semibold break-words">{t.title}</div>
+                    {t.description ? (
+                      <div className="mt-1 text-sm text-muted-foreground break-words">
+                        {t.description}
+                      </div>
+                    ) : null}
+                    {(() => {
+                      const idx = taskIndexMap[t.id];
+                      const msgs =
+                        getFieldErrors(`ratings.${idx}.rating`) || getFieldErrors(`ratings.${idx}`) || [];
+                      if (msgs.length > 0) {
+                        return (
+                          <div className="mt-2">
+                            {msgs.map((_, i) => (
+                              <p key={i} className="text-xs text-red-600 break-words whitespace-normal">
+                                評価を選択してください
+                              </p>
+                            ))}
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
+                  </div>
 
-                <div className="flex items-center gap-2">
+                  <div className="w-full sm:w-64 flex items-center gap-2 justify-end flex-shrink-0">
                   <div className="flex gap-2">
                     {(["○", "△", "×", "-"] as Rating[]).map((r) => {
                       const active = ratings[t.id] === r;
@@ -336,6 +397,7 @@ export default function NewMatchPage() {
 
                   <RatingBadge rating={ratings[t.id] ?? "-"} />
                 </div>
+                {/* per-task errors are rendered above (title/description area) */}
               </div>
             ))}
           </div>

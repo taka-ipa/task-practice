@@ -437,7 +437,7 @@ export default function DashboardPage() {
         {tasks.length === 0 ? (
           <Card className="p-6">
             <p className="text-sm text-muted-foreground">
-              課題がまだないよ（/api/tasks が空だった）
+              課題がまだないよ
             </p>
           </Card>
         ) : (

@@ -228,7 +228,7 @@ export default function MatchDetailPage() {
         </div>
 
         {!isEditingNote ? (
-          <div className="mt-3 whitespace-pre-wrap text-sm text-muted-foreground">
+          <div className="mt-3 break-words whitespace-normal text-sm text-muted-foreground">
             {match.note && match.note.trim() !== "" ? match.note : "なし"}
           </div>
         ) : (
