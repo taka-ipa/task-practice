@@ -448,33 +448,11 @@ export default function DashboardPage() {
                   <div className="min-w-0">
                     <p className="text-base font-semibold">{task.title}</p>
                     <div className="mt-2 flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">今日の評価</span>
-                      <RatingBadge rating={task.todayRating} />
+                      {/* 今日の評価表示を非表示にしました */}
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setRating(task.id, "○")}
-                      className="inline-flex items-center justify-center rounded-full btn px-4 text-sm font-semibold transition hover:shadow-sm"
-                    >
-                      ○
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setRating(task.id, "△")}
-                      className="inline-flex items-center justify-center rounded-full btn px-4 text-sm font-semibold transition hover:shadow-sm"
-                    >
-                      △
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setRating(task.id, "×")}
-                      className="inline-flex items-center justify-center rounded-full btn px-4 text-sm font-semibold transition hover:shadow-sm"
-                    >
-                      ×
-                    </button>
                     <button
                       type="button"
                       onClick={() => handleDelete(task.id)}
@@ -678,30 +656,7 @@ export default function DashboardPage() {
                         >
                           <p className="text-sm font-semibold">{task.title}</p>
 
-                          <div className="flex items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={() => setRating(task.id, "○")}
-                              className="inline-flex items-center justify-center rounded-full btn px-4 text-sm font-semibold transition hover:shadow-sm"
-                            >
-                              ○
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setRating(task.id, "△")}
-                              className="inline-flex items-center justify-center rounded-full btn px-4 text-sm font-semibold transition hover:shadow-sm"
-                            >
-                              △
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setRating(task.id, "×")}
-                              className="inline-flex items-center justify-center rounded-full btn px-4 text-sm font-semibold transition hover:shadow-sm"
-                            >
-                              ×
-                            </button>
-                            <RatingBadge rating={ratings[task.id] ?? "-"} />
-                          </div>
+                          {/* 評価入力はダッシュボードで行わないため表示を省略 */}
                         </div>
                       ))}
                     </div>
