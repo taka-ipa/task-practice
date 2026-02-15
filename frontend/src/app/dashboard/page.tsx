@@ -472,7 +472,7 @@ export default function DashboardPage() {
       <div className="space-y-3">
         <div className="flex items-end justify-between gap-4">
           <div>
-            <h2 className="text-lg font-semibold">今日の試合</h2>
+            <h2 className="text-lg font-semibold">今日のバトル</h2>
             <p className="text-sm text-muted-foreground">（{today || "-"}）</p>
           </div>
           <Link
