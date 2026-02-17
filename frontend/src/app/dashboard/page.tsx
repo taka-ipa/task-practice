@@ -468,7 +468,7 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* 今日の試合 */}
+      {/* 今日のバトル */}
       <div className="space-y-3">
         <div className="flex items-end justify-between gap-4">
           <div>
