@@ -7,7 +7,6 @@ import Link from "next/link";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { ResultBadge } from "@/components/ui/ResultBadge";
-import { RatingBadge } from "@/components/ui/RatingBadge";
 import StageSelector from "@/components/StageSelector";
 import RuleSelector from "@/components/RuleSelector";
 import ModeSelector from "@/components/ModeSelector";
