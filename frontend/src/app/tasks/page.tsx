@@ -6,7 +6,7 @@ import Link from "next/link";
 
 type ApiTask = {
   id: number;
-  title: string;
+  name: string; // APIからはnameで来るけど、フロントではtitleとして扱う
   description: string | null;
   sort_order: number | null;
 };
@@ -141,7 +141,7 @@ export default function TasksPage() {
             key={t.id}
             className="rounded-xl bg-slate-900/80 border border-slate-700 px-4 py-3"
           >
-            <p className="text-sm font-medium break-words whitespace-normal">{t.title}</p>
+            <p className="text-sm font-medium break-words whitespace-normal">{t.name}</p>
             {t.description && (
               <p className="text-xs text-slate-400 mt-1 break-words whitespace-normal">{t.description}</p>
             )}

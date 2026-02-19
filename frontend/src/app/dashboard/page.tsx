@@ -24,6 +24,7 @@ type Task = {
   id: number;
   title: string;
   todayRating: Rating;
+  description?: string | null;
 };
 
 type ApiTask = {
@@ -255,6 +256,7 @@ export default function DashboardPage() {
         const mapped: Task[] = res.data.map((t) => ({
           id: t.id,
           title: t.name,
+          description: t.description ?? null,
           todayRating: "-",
         }));
 
@@ -446,6 +448,9 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between gap-4">
                   <div className="min-w-0">
                     <p className="text-base font-semibold">{task.title}</p>
+                    {task.description && (
+                      <p className="mt-2 text-sm text-muted-foreground break-words whitespace-normal">{task.description}</p>
+                    )}
                     <div className="mt-2 flex items-center gap-2">
                       {/* 今日の評価表示を非表示にしました */}
                     </div>
@@ -653,7 +658,12 @@ export default function DashboardPage() {
                           key={task.id}
                           className="flex items-center justify-between rounded-2xl border bg-white p-3"
                         >
-                          <p className="text-sm font-semibold">{task.title}</p>
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold">{task.title}</p>
+                            {task.description && (
+                              <p className="mt-1 text-xs text-muted-foreground break-words whitespace-normal">{task.description}</p>
+                            )}
+                          </div>
 
                           {/* 評価入力はダッシュボードで行わないため表示を省略 */}
                         </div>
