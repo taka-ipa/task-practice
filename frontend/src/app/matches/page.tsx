@@ -6,6 +6,8 @@ import api from "@/lib/api";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { ResultBadge } from "@/components/ui/ResultBadge";
+import StageSelector from "@/components/StageSelector";
+import WeaponSelector from "@/components/WeaponSelector";
 
 type Match = {
   id: number;
@@ -37,7 +39,8 @@ function formatPlayedAt(playedAt: string) {
 }
 
 export default function MatchesPage() {
-  const [date, setDate] = useState<string>(() => ymdLocal(new Date()));
+  const [stage, setStage] = useState<string>("");
+  const [weapon, setWeapon] = useState<string>("");
   const [matches, setMatches] = useState<Match[]>([]);
   const [status, setStatus] = useState<"loading" | "ok" | "unauth" | "error">("loading");
   const [page, setPage] = useState<number>(1);
@@ -48,9 +51,10 @@ export default function MatchesPage() {
     const fetchMatches = async () => {
       setStatus("loading");
       try {
-        const res = await api.get("/api/matches", {
-          params: { date, page, per_page: perPage },
-        });
+        const params: any = { page, per_page: perPage };
+        if (stage) params.stage = stage;
+        if (weapon) params.weapon = weapon;
+        const res = await api.get("/api/matches", { params });
         // Laravel の paginator は data, current_page, last_page などを返す
         setMatches(res.data.data ?? []);
         setLastPage(res.data.last_page ?? 1);
@@ -63,13 +67,15 @@ export default function MatchesPage() {
     };
 
     fetchMatches();
-  }, [date, page, perPage]);
+  }, [stage, weapon, page, perPage]);
 
-  const setToday = () => setDate(ymdLocal(new Date()));
-  const setYesterday = () => {
-    const d = new Date();
-    d.setDate(d.getDate() - 1);
-    setDate(ymdLocal(d));
+  const onStageChange = (v: string) => {
+    setStage(v);
+    setPage(1);
+  };
+
+  const onWeaponChange = (v: string) => {
+    setWeapon(v);
     setPage(1);
   };
 
@@ -97,8 +103,8 @@ export default function MatchesPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={`試合ログ（${date}）`}
-        description="日付を切り替えて試合を確認できます"
+        title={`試合ログ`}
+        description="ステージとブキで試合を絞り込めます"
         right={
           <div className="flex items-center gap-2">
                 <Link
@@ -117,36 +123,52 @@ export default function MatchesPage() {
         }
       />
 
-      {/* 日付切替 */}
+      {/* 検索機能 */}
       <Card className="p-5">
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={setToday}
-            className="btn px-4 text-sm font-semibold transition hover:shadow-sm"
-          >
-            今日
-          </button>
-          <button
-            onClick={setYesterday}
-            className="btn px-4 text-sm font-semibold transition hover:shadow-sm"
-          >
-            昨日
-          </button>
-
-          <div className="ml-auto flex items-center gap-3">
-            <div className="text-sm text-muted-foreground">任意日</div>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => {
-                setDate(e.target.value);
-                setPage(1);
-              }}
-              className="h-10 rounded-full border bg-white px-4 text-sm"
-            />
+          <div className="flex flex-wrap items-center gap-2 w-full">
+            <div className="w-72 flex items-center gap-2">
+              <div className="flex-1">
+                <StageSelector value={stage} onChange={onStageChange} />
+              </div>
+              {stage && (
+                <button
+                  type="button"
+                  onClick={() => setStage("")}
+                  className="inline-flex items-center justify-center rounded-full btn px-3 text-sm font-semibold transition hover:shadow-sm"
+                >
+                  クリア
+                </button>
+              )}
+            </div>
+            <div className="w-72 flex items-center gap-2">
+              <div className="flex-1">
+                <WeaponSelector value={weapon} onChange={onWeaponChange} />
+              </div>
+              {weapon && (
+                <button
+                  type="button"
+                  onClick={() => setWeapon("")}
+                  className="inline-flex items-center justify-center rounded-full btn px-3 text-sm font-semibold transition hover:shadow-sm"
+                >
+                  クリア
+                </button>
+              )}
+            </div>
+            <div className="ml-auto flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setStage("");
+                  setWeapon("");
+                  setPage(1);
+                }}
+                className="inline-flex items-center justify-center rounded-full btn px-4 text-sm font-semibold transition hover:shadow-sm"
+              >
+                全クリア
+              </button>
+            </div>
           </div>
-        </div>
-      </Card>
+        </Card>
 
       {/* 一覧 */}
       <div className="space-y-4">
@@ -168,7 +190,7 @@ export default function MatchesPage() {
         {status === "ok" && matches.length === 0 && (
           <Card className="p-6">
             <p className="text-sm text-muted-foreground">
-              この日の試合はなし
+              {stage || weapon ? "該当する試合はなし" : "最近の試合はまだないよ"}
             </p>
           </Card>
         )}
@@ -188,9 +210,6 @@ export default function MatchesPage() {
 
                     <p className="mt-1 text-sm text-muted-foreground">
                       {m.mode ?? "-"} / {m.weapon ?? "-"}
-                      {m.played_at
-                        ? ` · ${formatPlayedAt(m.played_at)}`
-                        : ""}
                     </p>
                   </div>
 

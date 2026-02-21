@@ -32,6 +32,18 @@ class MatchController extends Controller
         $perPage = (int) $request->query('per_page', 5);
         $perPage = max(1, min(100, $perPage));
 
+        // フィルタ: stage, weapon
+        $stage = $request->query('stage');
+        $weapon = $request->query('weapon');
+
+        if ($stage) {
+            $query->where('stage', $stage);
+        }
+
+        if ($weapon) {
+            $query->where('weapon', $weapon);
+        }
+
         if ($date) {
             // JSTの 00:00:00〜23:59:59 をそのままDBのdatetimeと比較する
             $start = Carbon::parse($date, 'Asia/Tokyo')->startOfDay();
@@ -40,9 +52,9 @@ class MatchController extends Controller
             $query->whereBetween('played_at', [
                 $start->format('Y-m-d H:i:s'),
                 $end->format('Y-m-d H:i:s'),
-            ])->orderByDesc('played_at');
+            ])->orderByDesc('created_at');
         } else {
-            $query->orderByDesc('played_at');
+            $query->orderByDesc('created_at');
         }
 
         $matches = $query->paginate($perPage);
