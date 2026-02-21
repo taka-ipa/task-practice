@@ -171,11 +171,11 @@ export default function DashboardPage() {
   const closeAdd = () => setIsAddOpen(false);
 
   const fetchMatches = async () => {
-    if (!today) return;
     try {
       setMatchesStatus("loading");
+      // 日付フィルタを外して直近の試合を取得する（ページネーションは API 側に合わせて調整）
       const res = await api.get<Paginated<Match[]>>("/api/matches", {
-        params: { date: today, per_page: 5, page: 1 },
+        params: { per_page: 5, page: 1 },
       });
       // API は paginator を返すため data を使う
       setMatches(res.data.data ?? []);
@@ -272,10 +272,10 @@ export default function DashboardPage() {
   // 今日の試合取得
   useEffect(() => {
     if (status !== "ok") return;
-    if (!today) return;
+    // 最近の試合を取得する（今日に依存しない）
     fetchMatches();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, today]);
+  }, [status]);
 
   // 日別サマリー取得
   useEffect(() => {
@@ -476,8 +476,7 @@ export default function DashboardPage() {
       <div className="space-y-3">
         <div className="flex items-end justify-between gap-4">
           <div>
-            <h2 className="text-lg font-semibold">今日のバトル</h2>
-            <p className="text-sm text-muted-foreground">（{today || "-"}）</p>
+            <h2 className="text-lg font-semibold">最近のバトル</h2>
           </div>
           <Link
             href="/matches"
