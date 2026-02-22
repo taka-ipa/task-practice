@@ -33,8 +33,8 @@ function formatPlayedAt(playedAt: string) {
   return d.toLocaleString("ja-JP", {
     month: "2-digit",
     day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
+    // hour: "2-digit",
+    // minute: "2-digit",
   });
 }
 
@@ -210,6 +210,7 @@ export default function MatchesPage() {
 
                     <p className="mt-1 text-sm text-muted-foreground">
                       {m.mode ?? "-"} / {m.weapon ?? "-"}
+                      {m.played_at ? ` · ${formatPlayedAt(m.played_at)}` : ""}
                     </p>
                   </div>
 

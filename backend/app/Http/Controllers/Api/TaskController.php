@@ -33,7 +33,7 @@ class TaskController extends Controller
         ]);
 
         $task = $user->tasks()->create([
-            'name' => $validated['title'],
+            'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
             'sort_order' => 0, // デフォルト値
             'is_active' => true, // デフォルト値

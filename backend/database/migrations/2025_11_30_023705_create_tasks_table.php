@@ -15,7 +15,7 @@ return new class extends Migration
                 ->constrained()
                 ->cascadeOnDelete();
 
-            $table->string('name');               // 課題名：例「初弾精度」
+            $table->string('title');               // 課題名：例「初弾精度」
             $table->text('description')->nullable(); // 補足説明
 
             $table->unsignedInteger('sort_order')->default(0); // 並び順

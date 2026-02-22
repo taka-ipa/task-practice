@@ -29,7 +29,7 @@ type Task = {
 
 type ApiTask = {
   id: number;
-  name: string;
+  title: string; // API now returns `title`
   description: string | null;
   sort_order: number | null;
 };
@@ -87,8 +87,8 @@ function formatPlayedAt(playedAt: string) {
   return d.toLocaleString("ja-JP", {
     month: "2-digit",
     day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
+    // hour: "2-digit",
+    // minute: "2-digit",
   });
 }
 
@@ -255,7 +255,7 @@ export default function DashboardPage() {
 
         const mapped: Task[] = res.data.map((t) => ({
           id: t.id,
-          title: t.name,
+          title: t.title,
           description: t.description ?? null,
           todayRating: "-",
         }));
@@ -472,7 +472,7 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* 今日のバトル */}
+      {/* 最近のバトル */}
       <div className="space-y-3">
         <div className="flex items-end justify-between gap-4">
           <div>
@@ -505,7 +505,7 @@ export default function DashboardPage() {
         ) : matches.length === 0 ? (
           <Card className="p-6">
             <p className="text-sm text-muted-foreground">
-              今日の試合はまだないよ
+              最近の試合はまだないよ
             </p>
           </Card>
         ) : (
