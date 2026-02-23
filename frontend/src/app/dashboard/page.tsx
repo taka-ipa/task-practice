@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import Link from "next/link";
 
@@ -144,10 +145,26 @@ export default function DashboardPage() {
   // 試合追加モーダル
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      // try server-side logout if endpoint exists
+      await api.post("/api/logout");
+    } catch (e) {
+      // ignore errors - still clear client state
+      console.warn("logout request failed:", e);
+    }
+
+    // clear token and user state then redirect to login
+    if (typeof window !== "undefined") localStorage.removeItem("token");
+    setUser(null);
+    router.push("/login");
+  };
 
   const defaultForm: MatchForm = useMemo(
     () => ({
-      played_at: new Date().toISOString().slice(0, 16),
+      played_at: "",
       rule: "",
       stage: "",
       is_win: "win",
@@ -162,7 +179,7 @@ export default function DashboardPage() {
   const openAdd = () => {
     setForm({
       ...defaultForm,
-      played_at: new Date().toISOString().slice(0, 16),
+      played_at: "",
     });
     setRatings({});
     setIsAddOpen(true);
@@ -311,6 +328,15 @@ export default function DashboardPage() {
             >
               試合ログへ
             </Link>
+            {status === "ok" && (
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="inline-flex items-center justify-center rounded-full btn px-4 text-sm font-semibold transition hover:shadow-sm"
+              >
+                ログアウト
+              </button>
+            )}
           </div>
         }
       />

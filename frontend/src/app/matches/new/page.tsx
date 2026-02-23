@@ -59,8 +59,6 @@ export default function NewMatchPage() {
         setLoadingTasks(true);
         const res = await api.get("/api/tasks");
         const raw: any[] = res.data?.data ?? res.data; // dataラップどっちでも耐える
-
-        // API は `title` を返す前提で正規化
         const list: Task[] = (raw ?? []).map((it) => ({
           id: it.id,
           title: it.title ?? "",
