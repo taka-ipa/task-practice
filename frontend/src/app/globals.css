@@ -124,14 +124,38 @@ body {
   filter: brightness(0.95);
 }
 
-/* Danger button for destructive actions */
-.btn-danger {
-  background: transparent;
-  color: var(--salmon);
-  border: 1px solid rgba(255, 107, 107, 0.15);
+/* Danger button for destructive actions (filled variant) */
+.btn.btn-danger {
+  /* restore original salmon but slightly translucent */
+  background: rgba(255, 107, 107, 0.9); /* var(--salmon) with slight transparency */
+  color: var(--salmon-foreground);
+  border: 1px solid transparent;
 }
-.btn-danger:hover {
-  background: var(--salmon-100);
+.btn.btn-danger:hover {
+  filter: brightness(0.95);
+}
+
+/* Info / accent button (light water-blue) */
+.btn.btn-info {
+  background: rgba(56, 189, 248, 0.6); /* slightly darker translucent sky-400 */
+  color: #d0d2d4; /* darker sky for text */
+  border: 1px solid rgba(56, 189, 248, 0.7);
+}
+.btn.btn-info:hover {
+  background: rgba(56, 189, 248, 0.8);
+  filter: none;
+}
+
+/* Secondary subtle button */
+.btn.btn-secondary {
+  /* stronger cancel/secondary button for better visibility */
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--foreground);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+}
+.btn.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.9);
+  filter: none;
 }
 
 .badge-ink {

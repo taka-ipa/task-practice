@@ -179,7 +179,8 @@ export default function DashboardPage() {
   const openAdd = () => {
     setForm({
       ...defaultForm,
-      played_at: "",
+      // set initial datetime to JST (UTC+9)
+      played_at: new Date(Date.now() + 9 * 60 * 60000).toISOString().slice(0, 16),
     });
     setRatings({});
     setIsAddOpen(true);
