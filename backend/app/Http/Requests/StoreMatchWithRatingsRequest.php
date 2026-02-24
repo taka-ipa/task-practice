@@ -16,10 +16,10 @@ class StoreMatchWithRatingsRequest extends FormRequest
     {
         return [
             'played_at' => ['nullable', 'date'], // 必要なら date_format:Y-m-d\TH:i にしてもOK
-            'mode'      => ['nullable', 'string', 'max:255'],
-            'rule'      => ['nullable', 'string', 'max:255'],
-            'stage'     => ['nullable', 'string', 'max:255'],
-            'weapon'    => ['nullable', 'string', 'max:255'],
+            'mode'      => ['required', 'string', 'max:255'],
+            'rule'      => ['required', 'string', 'max:255'],
+            'stage'     => ['required', 'string', 'max:255'],
+            'weapon'    => ['required', 'string', 'max:255'],
             'is_win'    => ['nullable', 'boolean'],
             'note'      => ['nullable', 'string', 'max:1000'],
 

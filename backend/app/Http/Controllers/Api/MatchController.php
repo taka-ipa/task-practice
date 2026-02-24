@@ -66,10 +66,10 @@ class MatchController extends Controller
     {
         $validated = $request->validate([
             'played_at' => ['nullable', 'date'],
-            'mode'      => ['nullable', 'string', 'max:50'],
+            'mode'      => ['required', 'string', 'max:50'],
             'rule'      => ['required', 'string', 'max:50'],
-            'stage'     => ['nullable', 'string', 'max:100'],
-            'weapon'    => ['nullable', 'string', 'max:100'],
+            'stage'     => ['required', 'string', 'max:100'],
+            'weapon'    => ['required', 'string', 'max:100'],
             'is_win'    => ['nullable', 'boolean'],
         ]);
 

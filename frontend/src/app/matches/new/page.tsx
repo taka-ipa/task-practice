@@ -269,23 +269,41 @@ export default function NewMatchPage() {
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1">
-              <label className="text-sm font-semibold">モード（任意）</label>
+              <label className="text-sm font-semibold">モード</label>
               <ModeSelector
                 value={form.mode}
                 onChange={(v) => setForm((p) => ({ ...p, mode: v }))}
                 placeholder="Xマッチ…"
                 className="w-full"
               />
+              {getFieldErrors("mode").length > 0 ? (
+                getFieldErrors("mode").map((_, i) => (
+                  <p key={i} className="mt-1 text-xs text-red-600 break-words whitespace-normal">
+                    モードを選択してください
+                  </p>
+                ))
+              ) : submittedOnce && !form.mode ? (
+                <p className="mt-1 text-xs text-muted-foreground">モードを選んでね</p>
+              ) : null}
             </div>
 
             <div className="space-y-1">
-              <label className="text-sm font-semibold">ブキ（任意）</label>
+              <label className="text-sm font-semibold">ブキ</label>
               <WeaponSelector
                 value={form.weapon}
                 onChange={(v) => setForm((p) => ({ ...p, weapon: v }))}
                 placeholder="スプラマニュ…"
                 className="w-full"
               />
+              {getFieldErrors("weapon").length > 0 ? (
+                getFieldErrors("weapon").map((_, i) => (
+                  <p key={i} className="mt-1 text-xs text-red-600 break-words whitespace-normal">
+                    ブキを選択してください
+                  </p>
+                ))
+              ) : submittedOnce && !form.weapon ? (
+                <p className="mt-1 text-xs text-muted-foreground">ブキを選んでね</p>
+              ) : null}
             </div>
           </div>
 

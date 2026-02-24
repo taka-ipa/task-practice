@@ -12,6 +12,7 @@ import StageSelector from "@/components/StageSelector";
 import RuleSelector from "@/components/RuleSelector";
 import ModeSelector from "@/components/ModeSelector";
 import WeaponSelector from "@/components/WeaponSelector";
+import { RatingBadge } from "@/components/ui/RatingBadge";
 
 type User = {
   id: number;
@@ -176,6 +177,14 @@ export default function DashboardPage() {
 
   const [form, setForm] = useState<MatchForm>(defaultForm);
 
+  type ApiValidationErrors = Record<string, string[]>;
+  const [errors, setErrors] = useState<ApiValidationErrors>({});
+  const [submittedOnce, setSubmittedOnce] = useState(false);
+
+  const getFieldErrors = (field: string) => {
+    return (errors && errors[field]) || [];
+  };
+
   const openAdd = () => {
     setForm({
       ...defaultForm,
@@ -220,6 +229,21 @@ export default function DashboardPage() {
     e.preventDefault();
     if (isSubmitting) return;
 
+    setSubmittedOnce(true);
+    setErrors({});
+
+    // フロント側検証: 足りないフィールドを errors に詰める
+    const frontErrors: ApiValidationErrors = {};
+    if (!form.rule) frontErrors.rule = ["ルールを選択してください"];
+    if (!form.stage) frontErrors.stage = ["ステージを選択してください"];
+    if (!form.mode) frontErrors.mode = ["モードを選択してください"];
+    if (!form.weapon) frontErrors.weapon = ["ブキを選択してください"];
+
+    if (Object.keys(frontErrors).length > 0) {
+      setErrors(frontErrors);
+      return;
+    }
+
     const ratingsArray = Object.entries(ratings)
       .filter(([_, r]) => r !== "-")
       .map(([taskId, r]) => ({
@@ -238,9 +262,16 @@ export default function DashboardPage() {
       await api.post("/api/matches-with-ratings", payload);
       await fetchMatches();
       await fetchSummary();
+      // reset form state like matches/new
+      setSubmittedOnce(false);
+      setErrors({});
       closeAdd();
     } catch (error) {
       console.error("failed to create match with ratings", error);
+      const e: any = error;
+      if (e?.response?.status === 422) {
+        setErrors(e.response.data.errors ?? {});
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -626,45 +657,81 @@ export default function DashboardPage() {
 
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div className="space-y-1">
-                    <label className="text-sm font-semibold">ルール（任意）</label>
+                    <label className="text-sm font-semibold">ルール（必須）</label>
                     <RuleSelector
                       value={form.rule}
                       onChange={(v) => setForm((p) => ({ ...p, rule: v }))}
                       placeholder="エリア / ヤグラ…"
                       className="w-full"
                     />
+                    {getFieldErrors("rule").length > 0 ? (
+                      getFieldErrors("rule").map((_, i) => (
+                        <p key={i} className="mt-1 text-xs text-red-600 break-words whitespace-normal">
+                          ルールを選択してください
+                        </p>
+                      ))
+                    ) : submittedOnce && !form.rule ? (
+                      <p className="mt-1 text-xs text-muted-foreground">ルールを選んでね</p>
+                    ) : null}
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-sm font-semibold">ステージ（任意）</label>
+                    <label className="text-sm font-semibold">ステージ（必須）</label>
                     <StageSelector
                       value={form.stage}
                       onChange={(v) => setForm((p) => ({ ...p, stage: v }))}
                       placeholder="ネギトロ…"
                       className="w-full"
                     />
+                    {getFieldErrors("stage").length > 0 ? (
+                      getFieldErrors("stage").map((_, i) => (
+                        <p key={i} className="mt-1 text-xs text-red-600 break-words whitespace-normal">
+                          ステージを選択してください
+                        </p>
+                      ))
+                    ) : submittedOnce && !form.stage ? (
+                      <p className="mt-1 text-xs text-muted-foreground">ステージを選んでね</p>
+                    ) : null}
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div className="space-y-1">
-                    <label className="text-sm font-semibold">モード（任意）</label>
+                    <label className="text-sm font-semibold">モード（必須）</label>
                     <ModeSelector
                       value={form.mode}
                       onChange={(v) => setForm((p) => ({ ...p, mode: v }))}
                       placeholder="Xマッチ…"
                       className="w-full"
                     />
+                    {getFieldErrors("mode").length > 0 ? (
+                      getFieldErrors("mode").map((_, i) => (
+                        <p key={i} className="mt-1 text-xs text-red-600 break-words whitespace-normal">
+                          モードを選択してください
+                        </p>
+                      ))
+                    ) : submittedOnce && !form.mode ? (
+                      <p className="mt-1 text-xs text-muted-foreground">モードを選んでね</p>
+                    ) : null}
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-sm font-semibold">ブキ（任意）</label>
+                    <label className="text-sm font-semibold">ブキ（必須）</label>
                     <WeaponSelector
                       value={form.weapon}
                       onChange={(v) => setForm((p) => ({ ...p, weapon: v }))}
                       placeholder="スプラマニュ…"
                       className="w-full"
                     />
+                    {getFieldErrors("weapon").length > 0 ? (
+                      getFieldErrors("weapon").map((_, i) => (
+                        <p key={i} className="mt-1 text-xs text-red-600 break-words whitespace-normal">
+                          ブキを選択してください
+                        </p>
+                      ))
+                    ) : submittedOnce && !form.weapon ? (
+                      <p className="mt-1 text-xs text-muted-foreground">ブキを選んでね</p>
+                    ) : null}
                   </div>
                 </div>
 
@@ -682,16 +749,36 @@ export default function DashboardPage() {
                       {tasks.map((task) => (
                         <div
                           key={task.id}
-                          className="flex items-center justify-between rounded-2xl border bg-white p-3"
+                          className="flex flex-col gap-3 rounded-2xl border bg-white p-3 sm:flex-row sm:items-center sm:justify-between"
                         >
-                          <div className="min-w-0">
-                            <p className="text-sm font-semibold">{task.title}</p>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold break-words">{task.title}</p>
                             {task.description && (
-                              <p className="mt-1 text-xs text-muted-foreground break-words whitespace-normal">{task.description}</p>
+                              <p className="mt-1 text-sm text-muted-foreground break-words">{task.description}</p>
                             )}
                           </div>
 
-                          {/* 評価入力はダッシュボードで行わないため表示を省略 */}
+                          <div className="w-full sm:w-64 flex items-center gap-2 justify-end flex-shrink-0">
+                            <div className="flex gap-2">
+                              {( ["○", "△", "×", "-"] as Rating[] ).map((r) => {
+                                const active = ratings[task.id] === r;
+                                return (
+                                  <button
+                                    key={r}
+                                    type="button"
+                                    onClick={() => setRating(task.id, r)}
+                                    className={`inline-flex h-10 items-center justify-center rounded-full border px-4 text-sm font-semibold transition hover:shadow-sm ${
+                                      active ? "bg-slate-50" : "bg-white"
+                                    }`}
+                                  >
+                                    {r}
+                                  </button>
+                                );
+                              })}
+                            </div>
+
+                            <RatingBadge rating={ratings[task.id] ?? "-"} />
+                          </div>
                         </div>
                       ))}
                     </div>
