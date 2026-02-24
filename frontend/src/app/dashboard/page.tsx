@@ -345,10 +345,10 @@ export default function DashboardPage() {
         title="今日の課題"
         description="課題ごとに○△×で振り返り。試合もまとめて記録できます。"
         right={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={openAdd}
-              className="inline-flex items-center justify-center rounded-full btn btn-primary px-4 text-sm font-semibold transition hover:shadow-sm disabled:opacity-50"
+              className="w-full sm:w-auto inline-flex items-center justify-center rounded-full btn btn-primary px-4 text-sm font-semibold transition hover:shadow-sm disabled:opacity-50"
               disabled={status !== "ok"}
               type="button"
             >
@@ -356,7 +356,7 @@ export default function DashboardPage() {
             </button>
             <Link
               href="/matches"
-              className="inline-flex items-center justify-center rounded-full btn px-4 text-sm font-semibold transition hover:shadow-sm"
+              className="w-full sm:w-auto inline-flex items-center justify-center rounded-full btn px-4 text-sm font-semibold transition hover:shadow-sm"
             >
               試合ログへ
             </Link>
@@ -364,7 +364,7 @@ export default function DashboardPage() {
               <button
                 type="button"
                 onClick={handleLogout}
-                className="inline-flex items-center justify-center rounded-full btn px-4 text-sm font-semibold transition hover:shadow-sm"
+                className="w-full sm:w-auto inline-flex items-center justify-center rounded-full btn px-4 text-sm font-semibold transition hover:shadow-sm"
               >
                 ログアウト
               </button>
@@ -759,7 +759,7 @@ export default function DashboardPage() {
                           </div>
 
                           <div className="w-full sm:w-64 flex items-center gap-2 justify-end flex-shrink-0">
-                            <div className="flex gap-2">
+                            <div className="flex flex-wrap gap-2">
                               {( ["○", "△", "×", "-"] as Rating[] ).map((r) => {
                                 const active = ratings[task.id] === r;
                                 return (
@@ -767,7 +767,7 @@ export default function DashboardPage() {
                                     key={r}
                                     type="button"
                                     onClick={() => setRating(task.id, r)}
-                                    className={`inline-flex h-10 items-center justify-center rounded-full border px-4 text-sm font-semibold transition hover:shadow-sm ${
+                                    className={`inline-flex h-9 sm:h-10 items-center justify-center rounded-full border px-3 sm:px-4 text-sm font-semibold transition hover:shadow-sm ${
                                       active ? "bg-slate-50" : "bg-white"
                                     }`}
                                   >
@@ -777,7 +777,9 @@ export default function DashboardPage() {
                               })}
                             </div>
 
-                            <RatingBadge rating={ratings[task.id] ?? "-"} />
+                            <div className="ml-2">
+                              <RatingBadge rating={ratings[task.id] ?? "-"} />
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -785,7 +787,7 @@ export default function DashboardPage() {
                   )}
                 </div>
 
-                <div className="pt-2 flex gap-2">
+                <div className="pt-2 flex flex-col gap-2 sm:flex-row">
                   <button
                     type="button"
                     onClick={closeAdd}

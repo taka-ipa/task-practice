@@ -64,7 +64,7 @@ img, video, svg { max-width: 100%; height: auto; display: block; }
   .badge { height: 1.5rem; width: 1.5rem; font-size: 0.7rem; }
   .result-badge { padding: 0.2rem 0.5rem; font-size: 0.6875rem; }
 
-  .card { padding: var(--card-padding); border-radius: 0.75rem; }
+  .card { padding: var(--card-padding); border-radius: 0.75rem; overflow: visible; }
 }
 
 /* Medium screens (phones in landscape / small tablets) */
@@ -199,6 +199,9 @@ body {
   border-radius: 1rem;
   border: 1px solid var(--border);
   background: var(--background);
+  box-sizing: border-box;
+  width: 100%;
+  overflow: visible;
 }
 
 /* Card hover subtle lift */
