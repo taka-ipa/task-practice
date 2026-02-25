@@ -431,30 +431,6 @@ export default function NewMatchPage() {
 
       {/* 保存エリア */}
       <div className="space-y-3">
-        {Object.keys(errors).length > 0 && (
-          <Card className="p-5">
-            <p className="font-semibold">入力エラーがあります</p>
-            <ul className="mt-2 list-disc pl-5 text-sm text-muted-foreground">
-              {Object.entries(errors).flatMap(([field, msgs]) =>
-                (msgs ?? []).map((m, i) => (
-                  <li key={`${field}-${i}`}>
-                    {field === "played_at"
-                      ? `played_at: ${m}`
-                      : field === "rule"
-                      ? `rule: ${m}`
-                      : field === "stage"
-                      ? `stage: ${m}`
-                      : field === "is_win"
-                      ? `is_win: ${m}`
-                      : field === "ratings"
-                      ? `ratings: ${m}`
-                      : `${field}: ${m}`}
-                  </li>
-                ))
-              )}
-            </ul>
-          </Card>
-        )}
 
         <div className="flex flex-col gap-2 sm:flex-row">
           <button
