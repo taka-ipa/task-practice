@@ -342,8 +342,8 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="今日の課題"
-        description="課題ごとに○△×で振り返り。試合もまとめて記録できます。"
+        title="バトルダッシュボード"
+        description="今日のプレイを記録して、勝率と課題を振り返ろう！イカした成長を見える化します。"
         right={
           <div className="flex flex-wrap items-center gap-2">
             <button
@@ -374,7 +374,7 @@ export default function DashboardPage() {
       />
 
       {/* ユーザー状態 */}
-      <Card className="p-5">
+      <Card className="p-5 card--drip">
         {status === "loading" && (
           <p className="text-sm text-muted-foreground">ユーザー確認中...</p>
         )}
@@ -436,7 +436,7 @@ export default function DashboardPage() {
           </Card>
         ) : (
           <div className="grid gap-4">
-            <Card className="p-5">
+            <Card className="p-5 card--wave">
               <p className="text-sm text-muted-foreground">
                 {summary.range.from} 〜 {summary.range.to}
               </p>
@@ -461,7 +461,7 @@ export default function DashboardPage() {
             </Card>
 
             {todaySummary ? (
-              <Card className="p-5">
+              <Card className="p-5 card--organic">
                 <p className="text-sm text-muted-foreground">
                   今日（{todaySummary.date}）
                 </p>
