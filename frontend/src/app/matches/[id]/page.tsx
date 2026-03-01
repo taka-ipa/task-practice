@@ -247,15 +247,8 @@ export default function MatchDetailPage() {
                 disabled={savingNote}
                 type="button"
               >
-                {savingNote ? "試合を記録中..." : "試合を記録"}
+                {savingNote ? "メモを保存中..." : "メモを保存"}
               </button>
-
-              <Link
-                href="/matches"
-                className="inline-flex items-center justify-center rounded-full btn px-4 text-sm font-semibold transition hover:shadow-sm"
-              >
-                試合ログへ
-              </Link>
             </div>
           </div>
         )}

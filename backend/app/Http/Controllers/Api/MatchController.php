@@ -101,7 +101,7 @@ class MatchController extends Controller
         ],
         'ratings' => $match->ratings->map(fn ($r) => [
             'task_id' => $r->task_id,
-            'title' => $r->task?->name,
+            'title' => $r->task?->title,
             'rating' => $r->rating,
         ])->values(),
         ]);
