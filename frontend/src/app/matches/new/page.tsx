@@ -48,8 +48,19 @@ export default function NewMatchPage() {
   // ratings を Record で持つ
   const [ratings, setRatings] = useState<Record<number, Rating>>({});
 
+  const [phase, setPhase] = useState<"setup" | "battle">("setup");
+
+  // 今回の試合で使う課題の選択状態
+  const [selectedTaskIds, setSelectedTaskIds] = useState<Record<number, boolean>>({});
+
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string>("");
+  const [lastSavedMatch, setLastSavedMatch] = useState<{
+    rule?: string | null;
+    stage?: string | null;
+    mode?: string | null;
+    weapon?: string | null;
+  } | null>(null);
   const [errors, setErrors] = useState<ApiValidationErrors>({});
   const [submittedOnce, setSubmittedOnce] = useState(false);
 
@@ -67,6 +78,13 @@ export default function NewMatchPage() {
         }));
 
         setTasks(list);
+
+        // 初期選択（何も選ばない）
+        setSelectedTaskIds(() => {
+          const m: Record<number, boolean> = {};
+          for (const t of list) m[t.id] = false;
+          return m;
+        });
 
         // 初期値：未設定のものは "-" 扱い
         setRatings((prev) => {
@@ -94,13 +112,20 @@ export default function NewMatchPage() {
     }));
   }, [ratings]);
 
+  // 選択された課題のみを送る ratings 配列
+  const filteredRatingArray = useMemo(() => {
+    return Object.entries(ratings)
+      .filter(([taskId]) => selectedTaskIds[Number(taskId)])
+      .map(([taskId, rating]) => ({ task_id: Number(taskId), rating }));
+  }, [ratings, selectedTaskIds]);
+
   const taskIndexMap = useMemo(() => {
     const map: Record<number, number> = {};
-    ratingArray.forEach((r, i) => {
+    filteredRatingArray.forEach((r, i) => {
       map[r.task_id] = i;
     });
     return map;
-  }, [ratingArray]);
+  }, [filteredRatingArray]);
 
   const getFieldErrors = (field: string) => {
     return (errors && errors[field]) || [];
@@ -133,6 +158,13 @@ export default function NewMatchPage() {
       return next;
     });
 
+    // 選択状態もリセット
+    setSelectedTaskIds(() => {
+      const m: Record<number, boolean> = {};
+      for (const t of tasks) m[t.id] = false;
+      return m;
+    });
+
     setSubmittedOnce(false);
     setErrors({});
   };
@@ -151,11 +183,22 @@ export default function NewMatchPage() {
         stage: form.stage || null,
         weapon: form.weapon || null,
         is_win: form.is_win,
-        ratings: ratingArray,
+        ratings: filteredRatingArray,
       };
 
-      await api.post("/api/matches-with-ratings", payload);
-      setMessage("試合を記録しました ✅");
+      const res = await api.post("/api/matches-with-ratings", payload);
+      const saved = res.data;
+      setMessage("試合を記録しました！");
+
+      // 前回の試合情報を保持（次の試合プリセット用）
+      setLastSavedMatch({
+        rule: saved.rule ?? null,
+        stage: saved.stage ?? null,
+        mode: saved.mode ?? null,
+        weapon: saved.weapon ?? null,
+      });
+
+      // 入力はリセット（次の試合へを押したときにプリセットする）
       resetForm();
     } catch (e: any) {
       console.error(e);
@@ -171,8 +214,52 @@ export default function NewMatchPage() {
     }
   };
 
+  const formatDatetimeLocal = (d: Date) => {
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const yyyy = d.getFullYear();
+    const mm = pad(d.getMonth() + 1);
+    const dd = pad(d.getDate());
+    const hh = pad(d.getHours());
+    const mi = pad(d.getMinutes());
+    return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
+  };
+
+  const gotoNextMatch = () => {
+    if (!lastSavedMatch) return;
+    const now = new Date();
+    setForm((p) => ({
+      ...p,
+      played_at: formatDatetimeLocal(now),
+      rule: lastSavedMatch.rule ?? "",
+      stage: lastSavedMatch.stage ?? "",
+      mode: lastSavedMatch.mode ?? "",
+      weapon: lastSavedMatch.weapon ?? "",
+      is_win: true,
+    }));
+
+    // ratings/selection はリセットして、準備フェーズへ
+    setRatings(() => {
+      const next: Record<number, Rating> = {};
+      for (const t of tasks) next[t.id] = "-";
+      return next;
+    });
+    setSelectedTaskIds(() => {
+      const m: Record<number, boolean> = {};
+      for (const t of tasks) m[t.id] = false;
+      return m;
+    });
+
+    setPhase("setup");
+    setMessage("次の試合を準備しています");
+    setLastSavedMatch(null);
+  };
+
   const setTaskRating = (taskId: number, rating: Rating) => {
     setRatings((prev) => ({ ...prev, [taskId]: rating }));
+  };
+
+  const toggleSelectTask = (taskId: number) => {
+    setSelectedTaskIds((p) => ({ ...p, [taskId]: !p[taskId] }));
   };
 
   return (
@@ -198,7 +285,8 @@ export default function NewMatchPage() {
         }
       />
 
-      {/* 試合フォーム */}
+      {phase === "setup" && (
+      /* 試合フォーム */
       <Card className="p-5">
         <h2 className="text-lg font-semibold">試合情報</h2>
 
@@ -308,100 +396,85 @@ export default function NewMatchPage() {
           </div>
 
           <div className="space-y-1">
-            <label className="text-sm font-semibold">勝敗</label>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setForm((p) => ({ ...p, is_win: true }))}
-                className={`inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold border transition hover:shadow-sm ${
-                  form.is_win ? "badge-ink" : "btn"
-                }`}
-              >
-                WIN
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setForm((p) => ({ ...p, is_win: false }))}
-                className={`inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold border transition hover:shadow-sm ${
-                  !form.is_win ? "badge-salmon" : "btn"
-                }`}
-              >
-                LOSE
-              </button>
-            </div>
+            <p className="text-sm text-muted-foreground">勝敗は試合中に入力できます</p>
           </div>
         </div>
       </Card>
+      )}
 
-      {/* 課題評価 */}
+      {phase === "setup" && (
+      /* 今回の課題選択（準備フェーズ） */
       <Card className="p-5">
-        <div className="flex items-center justify-between gap-4">
-          <h2 className="text-lg font-semibold">課題評価（○△×）</h2>
-          <span className="text-sm text-muted-foreground">
-            選択中の数：{Object.values(ratings).filter((r) => r !== "-").length}
-          </span>
+        <h2 className="text-lg font-semibold">今回の課題を選択</h2>
+        <div className="mt-4 space-y-3">
+          {loadingTasks ? (
+            <p className="text-sm text-muted-foreground">読み込み中...</p>
+          ) : tasks.length === 0 ? (
+            <p className="text-sm text-muted-foreground">課題がまだないよ（先に課題を追加してね）</p>
+          ) : (
+            tasks.map((t) => (
+              <label key={t.id} className="flex items-start gap-3 rounded-2xl border bg-white p-3">
+                <input
+                  type="checkbox"
+                  checked={!!selectedTaskIds[t.id]}
+                  onChange={() => toggleSelectTask(t.id)}
+                  className="mt-1"
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold break-words">{t.title}</div>
+                  {t.description ? (
+                    <div className="mt-1 text-sm text-muted-foreground break-words">{t.description}</div>
+                  ) : null}
+                </div>
+              </label>
+            ))
+          )}
         </div>
 
-        {loadingTasks ? (
-          <div className="mt-4">
-            <p className="text-sm text-muted-foreground">読み込み中...</p>
-          </div>
-        ) : tasks.length === 0 ? (
-          <div className="mt-4">
-            <p className="text-sm text-muted-foreground">
-              課題がまだないよ（先に課題を追加してね）
-            </p>
-            <div className="mt-2">
-              <Link
-                href="/tasks"
-                className="inline-flex items-center rounded-full btn px-3 py-1 text-sm font-semibold transition hover:shadow-sm"
-              >
-                課題ページへ（追加・編集）
-              </Link>
-            </div>
-          </div>
-        ) : (
-          <div className="mt-4 space-y-3">
-            {getRatingsErrors().length > 0 && (
-              <div className="text-sm text-red-600 break-words whitespace-normal">
-                {getRatingsErrors().map((_, i) => (
-                  <div key={i} className="mt-1 max-w-full break-words whitespace-normal">課題の評価を入力してください</div>
-                ))}
-              </div>
-            )}
-            {tasks.map((t) => (
-              <div
-                key={t.id}
-                className="flex flex-col gap-3 rounded-2xl border bg-white p-4 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div className="flex-1 min-w-0">
-                    <div className="font-semibold break-words">{t.title}</div>
-                    {t.description ? (
-                      <div className="mt-1 text-sm text-muted-foreground break-words">
-                        {t.description}
-                      </div>
-                    ) : null}
-                    {(() => {
-                      const idx = taskIndexMap[t.id];
-                      const msgs =
-                        getFieldErrors(`ratings.${idx}.rating`) || getFieldErrors(`ratings.${idx}`) || [];
-                      if (msgs.length > 0) {
-                        return (
-                          <div className="mt-2">
-                            {msgs.map((_, i) => (
-                              <p key={i} className="text-xs text-red-600 break-words whitespace-normal">
-                                評価を選択してください
-                              </p>
-                            ))}
-                          </div>
-                        );
-                      }
-                      return null;
-                    })()}
-                  </div>
+        <div className="mt-4 flex gap-2">
+          <button
+            type="button"
+            onClick={() => setPhase("battle")}
+            disabled={loadingTasks}
+            className="inline-flex items-center justify-center rounded-full btn btn-primary px-6 text-sm font-semibold transition hover:shadow-sm disabled:opacity-50"
+          >
+            試合開始
+          </button>
 
-                  <div className="w-full sm:w-64 flex items-center gap-2 justify-end flex-shrink-0">
+          <button
+            type="button"
+            onClick={resetForm}
+            disabled={loadingTasks}
+            className="inline-flex items-center justify-center rounded-full btn px-6 text-sm font-semibold transition hover:shadow-sm disabled:opacity-50"
+          >
+            リセット
+          </button>
+        </div>
+      </Card>
+      )}
+
+      {/* 試合中フェーズ（課題評価と勝敗入力） */}
+      {phase === "battle" && (
+        <Card className="p-5">
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="text-lg font-semibold">課題評価（○△×）</h2>
+            <span className="text-sm text-muted-foreground">
+              選択中の数：{Object.entries(selectedTaskIds).filter(([, v]) => v).length}
+            </span>
+          </div>
+
+          {getRatingsErrors().length > 0 && (
+            <div className="mt-2 text-sm text-red-600">課題の評価を入力してください</div>
+          )}
+
+          <div className="mt-4 space-y-3">
+            {tasks.filter((t) => selectedTaskIds[t.id]).map((t) => (
+              <div key={t.id} className="flex flex-col gap-3 rounded-2xl border bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold break-words">{t.title}</div>
+                </div>
+
+                <div className="w-full sm:w-64 flex items-center gap-2 justify-end flex-shrink-0">
                   <div className="flex gap-2">
                     {(["○", "△", "×", "-"] as Rating[]).map((r) => {
                       const active = ratings[t.id] === r;
@@ -410,9 +483,7 @@ export default function NewMatchPage() {
                           key={r}
                           type="button"
                           onClick={() => setTaskRating(t.id, r)}
-                          className={`inline-flex h-10 items-center justify-center rounded-full border px-4 text-sm font-semibold transition hover:shadow-sm ${
-                            active ? "bg-slate-50" : "bg-white"
-                          }`}
+                          className={`inline-flex h-12 w-12 items-center justify-center rounded-full border text-sm font-semibold transition hover:shadow-sm ${active ? "bg-slate-50" : "bg-white"}`}
                         >
                           {r}
                         </button>
@@ -422,45 +493,66 @@ export default function NewMatchPage() {
 
                   <RatingBadge rating={ratings[t.id] ?? "-"} />
                 </div>
-                {/* per-task errors are rendered above (title/description area) */}
               </div>
             ))}
           </div>
-        )}
-      </Card>
 
-      {/* 保存エリア */}
-      <div className="space-y-3">
+          <div className="mt-4">
+            <label className="text-sm font-semibold">勝敗</label>
+            <div className="flex gap-2 mt-2">
+              <button
+                type="button"
+                onClick={() => setForm((p) => ({ ...p, is_win: true }))}
+                className={`inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold border transition hover:shadow-sm ${form.is_win ? "badge-ink" : "btn"}`}
+              >
+                WIN
+              </button>
 
-        <div className="flex flex-col gap-2 sm:flex-row">
+              <button
+                type="button"
+                onClick={() => setForm((p) => ({ ...p, is_win: false }))}
+                className={`inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold border transition hover:shadow-sm ${!form.is_win ? "badge-salmon" : "btn"}`}
+              >
+                LOSE
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-4 flex gap-2">
+            <button
+              type="button"
+              onClick={onSubmit}
+              disabled={saving}
+              className="inline-flex items-center justify-center rounded-full btn btn-primary px-6 text-sm font-semibold transition hover:shadow-sm disabled:opacity-50"
+            >
+              {saving ? "試合を記録中..." : "試合を記録"}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setPhase("setup")}
+              disabled={saving}
+              className="inline-flex items-center justify-center rounded-full btn px-6 text-sm font-semibold transition hover:shadow-sm disabled:opacity-50"
+            >
+              戻る（編集）
+            </button>
+          </div>
+        </Card>
+      )}
+
+      {message && <p className="text-sm text-muted-foreground">{message}</p>}
+
+      {lastSavedMatch && (
+        <div className="mt-2">
           <button
             type="button"
-            onClick={onSubmit}
-            disabled={saving || loadingTasks}
-            className="inline-flex items-center justify-center rounded-full btn btn-primary px-6 text-sm font-semibold transition hover:shadow-sm disabled:opacity-50"
+            onClick={gotoNextMatch}
+            className="w-full sm:inline-flex items-center justify-center rounded-full btn btn-primary px-4 py-3 text-sm font-semibold transition shadow-md hover:shadow-lg"
           >
-            {saving ? "試合を記録中..." : "試合を記録"}
+            次の試合へ
           </button>
-
-          <button
-            type="button"
-            onClick={resetForm}
-            disabled={saving}
-            className="inline-flex items-center justify-center rounded-full btn px-6 text-sm font-semibold transition hover:shadow-sm disabled:opacity-50"
-          >
-            リセット
-          </button>
-
-          <Link
-            href="/matches"
-            className="inline-flex items-center justify-center rounded-full btn px-6 text-sm font-semibold transition hover:shadow-sm"
-          >
-            試合ログへ戻る
-          </Link>
         </div>
-
-        {message && <p className="text-sm text-muted-foreground">{message}</p>}
-      </div>
+      )}
 
       {/* デバッグ（残すならCardで統一） */}
       <Card className="p-5">
