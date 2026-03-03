@@ -453,7 +453,7 @@ export default function NewMatchPage() {
       </Card>
       )}
 
-      {/* 試合中フェーズ（課題評価と勝敗入力） */}
+      {/* 課題評価と勝敗入力 */}
       {phase === "battle" && (
         <Card className="p-5">
           <div className="flex items-center justify-between gap-4">
