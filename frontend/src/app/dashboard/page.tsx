@@ -8,11 +8,6 @@ import Link from "next/link";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { ResultBadge } from "@/components/ui/ResultBadge";
-import StageSelector from "@/components/StageSelector";
-import RuleSelector from "@/components/RuleSelector";
-import ModeSelector from "@/components/ModeSelector";
-import WeaponSelector from "@/components/WeaponSelector";
-import { RatingBadge } from "@/components/ui/RatingBadge";
 
 type User = {
   id: number;
@@ -89,8 +84,6 @@ function formatPlayedAt(playedAt: string) {
   return d.toLocaleString("ja-JP", {
     month: "2-digit",
     day: "2-digit",
-    // hour: "2-digit",
-    // minute: "2-digit",
   });
 }
 
