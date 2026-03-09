@@ -484,9 +484,6 @@ export default function DashboardPage() {
                     {task.description && (
                       <p className="mt-2 text-sm text-muted-foreground break-words whitespace-normal">{task.description}</p>
                     )}
-                    <div className="mt-2 flex items-center gap-2">
-                      {/* 今日の評価表示を非表示にしました */}
-                    </div>
                   </div>
 
                   <div className="flex items-center gap-2">
