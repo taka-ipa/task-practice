@@ -1,16 +1,24 @@
-# PHP本体（CLI版）の公式イメージ
 FROM php:8.2-cli
 
-# 必要なパッケージと拡張モジュールをインストール
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
     libzip-dev \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    default-mysql-client \
   && docker-php-ext-install pdo_mysql zip \
   && rm -rf /var/lib/apt/lists/*
 
-# Composer を追加（公式 Composer イメージからコピー）
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# 作業ディレクトリ（ここに Laravel プロジェクトが入る想定）
 WORKDIR /var/www/html
+
+COPY . /var/www/html
+
+RUN composer install --no-interaction --prefer-dist --optimize-autoloader
+
+EXPOSE 8000
+
+CMD ["php", "-S", "0.0.0.0:8000", "-t", "public", "public/index.php"]
