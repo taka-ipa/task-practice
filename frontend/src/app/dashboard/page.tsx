@@ -566,8 +566,6 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
-
-      {/* modal removed - match creation moved to /matches/new */}
     </div>
   );
 }
