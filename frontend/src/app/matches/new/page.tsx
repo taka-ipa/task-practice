@@ -302,7 +302,6 @@ export default function NewMatchPage() {
               className="w-full rounded-full border bg-white px-4 py-2 text-sm"
             />
             {getFieldErrors("played_at").length > 0 ? (
-              // API のメッセージは言語が混在する可能性があるため、日本語の定型文を表示
               getFieldErrors("played_at").map((_, i) => (
                 <p key={i} className="mt-1 text-xs text-red-600 break-words whitespace-normal">
                   試合日時を入力してください
