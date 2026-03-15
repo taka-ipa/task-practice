@@ -67,16 +67,16 @@ services:
     environment:
       NEXT_PUBLIC_API_BASE_URL: http://3.114.175.93:8000
       NEXT_TELEMETRY_DISABLED: "1"
-      NODE_ENV: production
     ports:
       - "3000:3000"
     command:
       - sh
       - -lc
       - |
-          npm ci --no-audit --progress=false
+          set -e
+          npm ci --include=dev --no-audit --progress=false
           npm run build
-          npm run start
+          NODE_ENV=production npm run start
 
 volumes:
   db_data:
