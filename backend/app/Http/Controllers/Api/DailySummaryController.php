@@ -103,6 +103,36 @@ class DailySummaryController extends Controller
         $totalTriangle = array_sum(array_map(fn($d) => $d['ratings']['triangle'], $days));
         $totalCross = array_sum(array_map(fn($d) => $d['ratings']['cross'], $days));
 
+        /**
+         * ④ モード別集計（期間内）
+         */
+        $modeRows = DB::table('matches')
+            ->selectRaw('mode, COUNT(*) as matches, SUM(CASE WHEN is_win = 1 THEN 1 ELSE 0 END) as wins, SUM(CASE WHEN is_win = 0 THEN 1 ELSE 0 END) as losses')
+            ->where('user_id', $userId)
+            ->whereBetween('played_at', [
+                $from->copy()->startOfDay(),
+                $to->copy()->endOfDay(),
+            ])
+            ->groupBy('mode')
+            ->get();
+
+        $modes = [];
+        foreach ($modeRows as $mr) {
+            $m = (string) ($mr->mode ?? '不明');
+            $matchesCount = (int) $mr->matches;
+            $winsCount = (int) $mr->wins;
+            $lossesCount = (int) $mr->losses;
+            $winRateMode = $matchesCount > 0 ? round(($winsCount / $matchesCount) * 100, 1) : 0.0;
+
+            $modes[] = [
+                'mode' => $m,
+                'matches' => $matchesCount,
+                'wins' => $winsCount,
+                'losses' => $lossesCount,
+                'win_rate' => $winRateMode,
+            ];
+        }
+
 
         return response()->json([
             'range' => [
@@ -121,6 +151,7 @@ class DailySummaryController extends Controller
                 ],
             ],
             'days' => $days,
+            'modes' => $modes,
         ]);
     }
 }

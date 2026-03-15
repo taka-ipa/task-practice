@@ -81,7 +81,7 @@ export default function MatchesPage() {
   if (status === "unauth") {
     return (
       <div className="space-y-4">
-        <PageHeader title="試合ログ" description="ログインが必要です" />
+        <PageHeader title="バトルログ" description="ログインが必要です" />
         <Card className="p-6">
           <p className="text-sm text-muted-foreground">ログインしてね。</p>
           <div className="mt-4">
@@ -101,8 +101,8 @@ export default function MatchesPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={`試合ログ`}
-        description="ステージとブキで試合を絞り込めます"
+        title={`バトルログ`}
+        description="ステージとブキでバトルを絞り込めます"
         right={
           <div className="flex items-center gap-2">
                 <Link
@@ -111,11 +111,11 @@ export default function MatchesPage() {
             >
               ホームへ
             </Link>
-            <Link
+              <Link
               href="/matches/new"
               className="inline-flex items-center justify-center rounded-full btn btn-primary px-4 text-sm font-semibold transition hover:shadow-sm"
             >
-              ＋ 試合追加
+              ＋ バトル追加
             </Link>
           </div>
         }
@@ -185,10 +185,10 @@ export default function MatchesPage() {
           </Card>
         )}
 
-        {status === "ok" && matches.length === 0 && (
+            {status === "ok" && matches.length === 0 && (
           <Card className="p-6">
             <p className="text-sm text-muted-foreground">
-              {stage || weapon ? "該当する試合はなし" : "最近の試合はまだないよ"}
+              {stage || weapon ? "該当するバトルはなし" : "最近のバトルはまだないよ"}
             </p>
           </Card>
         )}

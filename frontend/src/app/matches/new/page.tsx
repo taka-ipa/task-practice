@@ -52,7 +52,7 @@ export default function NewMatchPage() {
 
   const [phase, setPhase] = useState<"setup" | "battle">("setup");
 
-  // 今回の試合で使う課題の選択状態
+  // 今回のバトルで使う課題の選択状態
   const [selectedTaskIds, setSelectedTaskIds] = useState<Record<number, boolean>>({});
 
   const [saving, setSaving] = useState(false);
@@ -194,7 +194,7 @@ export default function NewMatchPage() {
 
       const res = await api.post("/api/matches-with-ratings", payload);
       const saved = res.data;
-      setMessage("試合を記録しました！");
+      setMessage("バトルを記録しました！");
 
       // 前回の試合情報を保持（次の試合プリセット用）
       setLastSavedMatch({
@@ -213,7 +213,7 @@ export default function NewMatchPage() {
         setErrors(apiErrors ?? {});
         setMessage("入力内容を確認してください");
       } else {
-        setMessage("試合の記録に失敗しました");
+          setMessage("バトルの記録に失敗しました");
       }
     } finally {
       setSaving(false);
@@ -257,7 +257,7 @@ export default function NewMatchPage() {
     });
 
     setPhase("setup");
-    setMessage("次の試合を準備しています");
+    setMessage("次のバトルを準備しています");
     setLastSavedMatch(null);
   };
 
@@ -274,16 +274,16 @@ export default function NewMatchPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="試合追加"
-        description="試合情報と課題評価（○△×）をまとめて記録します"
+        title="バトル追加"
+          description="バトル情報と課題評価（○△×）をまとめて記録します"
         right={
           <div className="flex items-center gap-2">
-            <Link
-              href="/matches"
-              className="inline-flex items-center justify-center rounded-full btn px-4 text-sm font-semibold transition hover:shadow-sm"
-            >
-              試合ログへ
-            </Link>
+              <Link
+                href="/matches"
+                className="inline-flex items-center justify-center rounded-full btn px-4 text-sm font-semibold transition hover:shadow-sm"
+              >
+                バトルログへ
+              </Link>
             <Link
               href="/dashboard"
               className="inline-flex items-center justify-center rounded-full btn px-4 text-sm font-semibold transition hover:shadow-sm"
@@ -295,9 +295,9 @@ export default function NewMatchPage() {
       />
 
       {phase === "setup" && (
-      /* 試合フォーム */
+      /* バトルフォーム */
       <Card className="p-5">
-        <h2 className="text-lg font-semibold">試合情報</h2>
+        <h2 className="text-lg font-semibold">バトル情報</h2>
 
         <div className="mt-4 space-y-4">
           <div className="space-y-1">
@@ -312,13 +312,13 @@ export default function NewMatchPage() {
             />
             {getFieldErrors("played_at").length > 0 ? (
               getFieldErrors("played_at").map((_, i) => (
-                <p key={i} className="mt-1 text-xs text-red-600 break-words whitespace-normal">
-                  試合日時を入力してください
+                  <p key={i} className="mt-1 text-xs text-red-600 break-words whitespace-normal">
+                  バトル日時を入力してください
                 </p>
               ))
             ) : submittedOnce && !form.played_at ? (
-              <p className="text-xs text-muted-foreground">
-                試合日時を入力してね（未入力でもOK運用ならこのままでもOK）
+                <p className="text-xs text-muted-foreground">
+                バトル日時を入力してね（未入力でもOK運用ならこのままでもOK）
               </p>
             ) : null}
           </div>
@@ -404,7 +404,7 @@ export default function NewMatchPage() {
           </div>
 
           <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">勝敗は試合中に入力できます</p>
+            <p className="text-sm text-muted-foreground">勝敗はバトル中に入力できます</p>
           </div>
         </div>
       </Card>
@@ -469,7 +469,7 @@ export default function NewMatchPage() {
             disabled={loadingTasks}
             className="inline-flex items-center justify-center rounded-full btn btn-primary px-6 text-sm font-semibold transition hover:shadow-sm disabled:opacity-50"
           >
-            試合開始
+            バトル開始
           </button>
 
           <button
@@ -548,12 +548,12 @@ export default function NewMatchPage() {
             ))}
           </div>
 
-          <div className="mt-4">
+            <div className="mt-4">
             <label className="text-sm font-semibold">コメント</label>
             <textarea
               value={form.note}
               onChange={(e) => setForm((p) => ({ ...p, note: e.target.value }))}
-              placeholder="試合の感想やメモを入力"
+              placeholder="バトルの感想やメモを入力"
               className="w-full mt-2 min-h-[80px] rounded-xl border bg-white px-4 py-2 text-sm"
             />
             {getFieldErrors("note").length > 0 && (
@@ -592,7 +592,7 @@ export default function NewMatchPage() {
                 disabled={saving}
                 className="inline-flex items-center justify-center rounded-full btn btn-primary px-6 text-sm font-semibold transition hover:shadow-sm disabled:opacity-50"
               >
-                {saving ? "試合を記録中..." : "試合を記録"}
+                {saving ? "バトルを記録中..." : "バトルを記録"}
               </button>
 
               <button
@@ -612,13 +612,13 @@ export default function NewMatchPage() {
 
       {lastSavedMatch && (
         <div className="mt-2">
-          <button
-            type="button"
-            onClick={gotoNextMatch}
-            className="w-full sm:inline-flex items-center justify-center rounded-full btn btn-primary px-4 py-3 text-sm font-semibold transition shadow-md hover:shadow-lg"
-          >
-            次の試合へ
-          </button>
+            <button
+              type="button"
+              onClick={gotoNextMatch}
+              className="w-full sm:inline-flex items-center justify-center rounded-full btn btn-primary px-4 py-3 text-sm font-semibold transition shadow-md hover:shadow-lg"
+            >
+              次のバトルへ
+            </button>
         </div>
       )}
 
@@ -633,7 +633,7 @@ export default function NewMatchPage() {
           }}
           className="inline-flex items-center justify-center rounded-full btn px-6 text-sm font-semibold transition hover:shadow-sm"
         >
-          （デバッグ）試合ログを取得してconsole表示
+          （デバッグ）バトルログを取得してconsole表示
         </button>
       </Card>
     </div>

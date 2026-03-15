@@ -100,17 +100,17 @@ export default function MatchDetailPage() {
 
       setIsEditingNote(false);
     } catch (e) {
-      alert("試合の記録に失敗しました");
+      alert("バトルの記録に失敗しました");
     } finally {
       setSavingNote(false);
     }
   };
 
   /* ------- 状態表示（Cardで統一） ------- */
-  if (status === "loading") {
+    if (status === "loading") {
     return (
       <div className="space-y-4">
-        <PageHeader title="この試合の振り返り" right={<Link href="/matches" className="underline-offset-4 hover:underline text-sm font-semibold">試合ログへ</Link>} />
+        <PageHeader title="このバトルの振り返り" right={<Link href="/matches" className="underline-offset-4 hover:underline text-sm font-semibold">バトルログへ</Link>} />
         <Card className="p-6">
           <p className="text-sm text-muted-foreground">読み込み中...</p>
         </Card>
@@ -121,7 +121,7 @@ export default function MatchDetailPage() {
   if (status === "unauth") {
     return (
       <div className="space-y-4">
-        <PageHeader title="この試合の振り返り" description="ログインが必要です" />
+        <PageHeader title="このバトルの振り返り" description="ログインが必要です" />
         <Card className="p-6">
           <p className="text-sm text-muted-foreground">ログインしてね。</p>
           <div className="mt-4">
@@ -140,7 +140,7 @@ export default function MatchDetailPage() {
   if (status === "error" || !data) {
     return (
       <div className="space-y-4">
-        <PageHeader title="この試合の振り返り" description="読み込みに失敗しました" />
+        <PageHeader title="このバトルの振り返り" description="読み込みに失敗しました" />
         <Card className="p-6">
           <p className="text-sm text-muted-foreground">
             データの取得に失敗したかも。
@@ -150,7 +150,7 @@ export default function MatchDetailPage() {
               className="inline-flex items-center justify-center rounded-full btn px-4 text-sm font-semibold transition hover:shadow-sm"
               href="/matches"
             >
-              試合ログへ戻る
+              バトルログへ戻る
             </Link>
           </div>
         </Card>
@@ -160,18 +160,27 @@ export default function MatchDetailPage() {
 
   const { match, ratings } = data;
 
-  return (
+    return (
     <div className="space-y-6">
         <PageHeader
-        title="この試合の振り返り"
+        title="このバトルの振り返り"
         description={match.played_at ? `日時：${playedAtText}` : undefined}
         right={
-          <Link
-            href="/matches"
-            className="inline-flex items-center justify-center rounded-full btn px-4 text-sm font-semibold transition hover:shadow-sm"
-          >
-            試合ログへ
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center justify-center rounded-full btn px-3 text-sm font-semibold transition hover:shadow-sm"
+            >
+              ホーム
+            </Link>
+
+            <Link
+              href="/matches"
+              className="inline-flex items-center justify-center rounded-full btn px-4 text-sm font-semibold transition hover:shadow-sm"
+            >
+              バトルログへ
+            </Link>
+          </div>
         }
       />
 

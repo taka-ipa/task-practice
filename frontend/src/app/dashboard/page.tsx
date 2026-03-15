@@ -75,6 +75,13 @@ type DailySummary = {
     win_rate: number;
     ratings: { circle: number; triangle: number; cross: number };
   }[];
+  modes?: {
+    mode: string;
+    matches: number;
+    wins: number;
+    losses: number;
+    win_rate: number;
+  }[];
 };
 
 function formatPlayedAt(playedAt: string) {
@@ -307,7 +314,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="バトルダッシュボード"
+        title="ika training"
         description="今日のプレイを記録して、勝率と課題を振り返ろう！イカした成長を見える化します。"
         right={
           <div className="flex flex-wrap items-center gap-2">
@@ -316,7 +323,7 @@ export default function DashboardPage() {
                 href="/matches/new"
                 className="w-full sm:w-auto inline-flex items-center justify-center rounded-full btn btn-primary px-4 text-sm font-semibold transition hover:shadow-sm"
               >
-                ＋ 試合を追加
+                ＋ バトルを追加
               </Link>
             ) : (
               <button
@@ -324,7 +331,7 @@ export default function DashboardPage() {
                 disabled
                 type="button"
               >
-                ＋ 試合を追加
+                ＋ バトルを追加
               </button>
             )}
 
@@ -332,7 +339,7 @@ export default function DashboardPage() {
               href="/matches"
               className="w-full sm:w-auto inline-flex items-center justify-center rounded-full btn px-4 text-sm font-semibold transition hover:shadow-sm"
             >
-              試合ログへ
+              バトルログへ
             </Link>
 
             {status === "ok" && (
@@ -411,29 +418,35 @@ export default function DashboardPage() {
           </Card>
         ) : (
           <div className="grid gap-4">
-            <Card className="p-5 card--wave">
-              <p className="text-sm text-muted-foreground">
-                {summary.range.from} 〜 {summary.range.to}
-              </p>
+            {/* モード別サマリーのみを表示（直近7日合計は非表示） */}
 
-              <div className="mt-3 flex flex-wrap gap-6">
-                <div>
-                  <p className="text-sm text-muted-foreground">試合数</p>
-                  <p className="text-2xl font-bold">{summary.totals.matches}</p>
+              {/* モード別サマリー */}
+              {summary.modes && summary.modes.length > 0 && (
+                <div className="grid gap-4">
+                  <h3 className="text-sm text-muted-foreground">モード別サマリー</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {summary.modes.map((m: any) => (
+                      <Card key={m.mode} className="p-5">
+                        <p className="text-sm text-muted-foreground">{m.mode || '不明'}</p>
+                        <div className="mt-3 flex flex-wrap gap-4">
+                          <div>
+                            <p className="text-sm text-muted-foreground">バトル数</p>
+                            <p className="text-2xl font-bold">{m.matches}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">勝率</p>
+                            <p className="text-2xl font-bold">{m.win_rate}%</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">W / L</p>
+                            <p className="text-2xl font-bold">{m.wins}W / {m.losses}L</p>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">勝率</p>
-                  <p className="text-2xl font-bold">{summary.totals.win_rate}%</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">○ / △ / ×</p>
-                  <p className="text-2xl font-bold">
-                    {summary.totals.ratings.circle} / {summary.totals.ratings.triangle} / {" "}
-                    {summary.totals.ratings.cross}
-                  </p>
-                </div>
-              </div>
-            </Card>
+              )}
 
             {todaySummary ? (
               <Card className="p-5 card--organic">
@@ -442,12 +455,16 @@ export default function DashboardPage() {
                 </p>
                 <div className="mt-3 flex flex-wrap gap-6">
                   <div>
-                    <p className="text-sm text-muted-foreground">試合数</p>
+                    <p className="text-sm text-muted-foreground">バトル数</p>
                     <p className="text-2xl font-bold">{todaySummary.matches}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">勝率</p>
                     <p className="text-2xl font-bold">{todaySummary.win_rate}%</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">W / L</p>
+                    <p className="text-2xl font-bold">{todaySummary.wins}W / {todaySummary.losses}L</p>
                   </div>
                 </div>
               </Card>
@@ -508,18 +525,18 @@ export default function DashboardPage() {
           <div>
             <h2 className="text-lg font-semibold">最近のバトル</h2>
           </div>
-          <Link
-            href="/matches"
-            className="text-sm font-semibold underline-offset-4 hover:underline"
-          >
-            試合ログを見る
-          </Link>
+            <Link
+              href="/matches"
+              className="text-sm font-semibold underline-offset-4 hover:underline"
+            >
+              バトルログを見る
+            </Link>
         </div>
 
         {status !== "ok" ? (
-          <Card className="p-6">
+              <Card className="p-6">
             <p className="text-sm text-muted-foreground">
-              ログインすると試合が見れるよ
+              ログインするとバトルが見れるよ
             </p>
           </Card>
         ) : matchesStatus === "loading" ? (
@@ -535,7 +552,7 @@ export default function DashboardPage() {
         ) : matches.length === 0 ? (
           <Card className="p-6">
             <p className="text-sm text-muted-foreground">
-              最近の試合はまだないよ
+              最近のバトルはまだないよ
             </p>
           </Card>
         ) : (
