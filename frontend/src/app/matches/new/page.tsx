@@ -28,6 +28,7 @@ type MatchForm = {
   stage: string;
   weapon: string;
   is_win: boolean;
+  note?: string;
 };
 
 type ApiValidationErrors = Record<string, string[]>;
@@ -43,6 +44,7 @@ export default function NewMatchPage() {
     stage: "",
     weapon: "",
     is_win: true,
+    note: "",
   });
 
   // ratings を Record で持つ
@@ -63,6 +65,7 @@ export default function NewMatchPage() {
   } | null>(null);
   const [errors, setErrors] = useState<ApiValidationErrors>({});
   const [submittedOnce, setSubmittedOnce] = useState(false);
+  const [selectionError, setSelectionError] = useState<string>("");
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -149,6 +152,7 @@ export default function NewMatchPage() {
       stage: "",
       weapon: "",
       is_win: true,
+      note: "",
     });
 
     // tasks は残ってるので、ratings を "-" に戻す
@@ -167,6 +171,7 @@ export default function NewMatchPage() {
 
     setSubmittedOnce(false);
     setErrors({});
+    setSelectionError("");
   };
 
   const onSubmit = async () => {
@@ -182,7 +187,8 @@ export default function NewMatchPage() {
         rule: form.rule || null,
         stage: form.stage || null,
         weapon: form.weapon || null,
-        is_win: form.is_win,
+          is_win: form.is_win,
+          note: form.note || null,
         ratings: filteredRatingArray,
       };
 
@@ -235,6 +241,7 @@ export default function NewMatchPage() {
       mode: lastSavedMatch.mode ?? "",
       weapon: lastSavedMatch.weapon ?? "",
       is_win: true,
+      note: "",
     }));
 
     // ratings/selection はリセットして、準備フェーズへ
@@ -260,6 +267,8 @@ export default function NewMatchPage() {
 
   const toggleSelectTask = (taskId: number) => {
     setSelectedTaskIds((p) => ({ ...p, [taskId]: !p[taskId] }));
+    // 何か選択したらエラーをクリア
+    setSelectionError("");
   };
 
   return (
@@ -404,12 +413,24 @@ export default function NewMatchPage() {
       {phase === "setup" && (
       /* 今回の課題選択（準備フェーズ） */
       <Card className="p-5">
-        <h2 className="text-lg font-semibold">今回の課題を選択</h2>
+        <div className="flex items-start justify-between">
+          <h2 className="text-lg font-semibold">今回の課題を選択</h2>
+          <div>
+            <Link
+              href="/tasks"
+              className="inline-flex items-center justify-center rounded-full btn px-3 py-1 text-sm font-semibold"
+            >
+              課題を追加
+            </Link>
+          </div>
+        </div>
         <div className="mt-4 space-y-3">
           {loadingTasks ? (
             <p className="text-sm text-muted-foreground">読み込み中...</p>
           ) : tasks.length === 0 ? (
-            <p className="text-sm text-muted-foreground">課題がまだないよ（先に課題を追加してね）</p>
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">課題がまだないよ（先に課題を追加してね）</p>
+            </div>
           ) : (
             tasks.map((t) => (
               <label key={t.id} className="flex items-start gap-3 rounded-2xl border bg-white p-3">
@@ -430,10 +451,21 @@ export default function NewMatchPage() {
           )}
         </div>
 
+        {selectionError && (
+          <p className="mt-2 text-sm text-red-600">{selectionError}</p>
+        )}
+
         <div className="mt-4 flex gap-2">
           <button
             type="button"
-            onClick={() => setPhase("battle")}
+            onClick={() => {
+              const selectedCount = Object.values(selectedTaskIds).filter(Boolean).length;
+              if (selectedCount === 0) {
+                setSelectionError("課題を１つ以上選択してね！");
+                return;
+              }
+              setPhase("battle");
+            }}
             disabled={loadingTasks}
             className="inline-flex items-center justify-center rounded-full btn btn-primary px-6 text-sm font-semibold transition hover:shadow-sm disabled:opacity-50"
           >
@@ -460,6 +492,26 @@ export default function NewMatchPage() {
             <span className="text-sm text-muted-foreground">
               選択中の数：{Object.entries(selectedTaskIds).filter(([, v]) => v).length}
             </span>
+          </div>
+
+          {/* 試合中にもステージを確認・編集できるようにする */}
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="space-y-1">
+              <label className="text-sm font-semibold">ステージ</label>
+              <StageSelector
+                value={form.stage}
+                onChange={(v) => setForm((p) => ({ ...p, stage: v }))}
+                placeholder="マップ名"
+                className="w-full"
+              />
+              {getFieldErrors("stage").length > 0 ? (
+                getFieldErrors("stage").map((_, i) => (
+                  <p key={i} className="mt-1 text-xs text-red-600 break-words whitespace-normal">
+                    ステージ名を入力してください
+                  </p>
+                ))
+              ) : null}
+            </div>
           </div>
 
           {getRatingsErrors().length > 0 && (
@@ -497,6 +549,21 @@ export default function NewMatchPage() {
           </div>
 
           <div className="mt-4">
+            <label className="text-sm font-semibold">コメント</label>
+            <textarea
+              value={form.note}
+              onChange={(e) => setForm((p) => ({ ...p, note: e.target.value }))}
+              placeholder="試合の感想やメモを入力"
+              className="w-full mt-2 min-h-[80px] rounded-xl border bg-white px-4 py-2 text-sm"
+            />
+            {getFieldErrors("note").length > 0 && (
+              getFieldErrors("note").map((_, i) => (
+                <p key={i} className="mt-1 text-xs text-red-600 break-words whitespace-normal">コメントの入力が不正です</p>
+              ))
+            )}
+          </div>
+
+          <div className="mt-4">
             <label className="text-sm font-semibold">勝敗</label>
             <div className="flex gap-2 mt-2">
               <button
@@ -517,25 +584,27 @@ export default function NewMatchPage() {
             </div>
           </div>
 
-          <div className="mt-4 flex gap-2">
-            <button
-              type="button"
-              onClick={onSubmit}
-              disabled={saving}
-              className="inline-flex items-center justify-center rounded-full btn btn-primary px-6 text-sm font-semibold transition hover:shadow-sm disabled:opacity-50"
-            >
-              {saving ? "試合を記録中..." : "試合を記録"}
-            </button>
+          {!lastSavedMatch && (
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                onClick={onSubmit}
+                disabled={saving}
+                className="inline-flex items-center justify-center rounded-full btn btn-primary px-6 text-sm font-semibold transition hover:shadow-sm disabled:opacity-50"
+              >
+                {saving ? "試合を記録中..." : "試合を記録"}
+              </button>
 
-            <button
-              type="button"
-              onClick={() => setPhase("setup")}
-              disabled={saving}
-              className="inline-flex items-center justify-center rounded-full btn px-6 text-sm font-semibold transition hover:shadow-sm disabled:opacity-50"
-            >
-              戻る（編集）
-            </button>
-          </div>
+              <button
+                type="button"
+                onClick={() => setPhase("setup")}
+                disabled={saving}
+                className="inline-flex items-center justify-center rounded-full btn px-6 text-sm font-semibold transition hover:shadow-sm disabled:opacity-50"
+              >
+                戻る（編集）
+              </button>
+            </div>
+          )}
         </Card>
       )}
 
