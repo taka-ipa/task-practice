@@ -315,7 +315,7 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <PageHeader
         title="ika training"
-        description="今日のプレイを記録して、勝率と課題を振り返ろう！イカした成長を見える化します。"
+        description="今日の課題を意識してイカした成長をしよう！"
         right={
           <div className="flex flex-wrap items-center gap-2">
             {status === "ok" ? (
