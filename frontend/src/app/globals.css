@@ -96,6 +96,13 @@ img, video, svg { max-width: 100%; height: auto; display: block; }
   }
 }
 
+/* In dark mode, make non-filled buttons use the 'win' blue for text for better visibility */
+@media (prefers-color-scheme: dark) {
+  .btn:not(.btn-primary):not(.btn.btn-danger):not(.btn.btn-info):not(.btn.btn-secondary) {
+    color: var(--ink) !important;
+  }
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
