@@ -84,6 +84,18 @@ img, video, svg { max-width: 100%; height: auto; display: block; }
   }
 }
 
+/* Remove heavy text-shadow / stroke in dark mode so white text doesn't look embossed */
+@media (prefers-color-scheme: dark) {
+  .btn,
+  .btn-primary,
+  .btn.btn-danger,
+  .btn.btn-info,
+  .btn.btn-secondary {
+    text-shadow: none !important;
+    -webkit-text-stroke: 0 !important;
+  }
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
