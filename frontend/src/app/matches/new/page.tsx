@@ -622,20 +622,7 @@ export default function NewMatchPage() {
         </div>
       )}
 
-      {/* デバッグ（残すならCardで統一） */}
-      <Card className="p-5">
-        <button
-          type="button"
-          onClick={async () => {
-            const res = await api.get("/api/matches");
-            console.log("matches:", res.data);
-            alert("consoleに出したよ！");
-          }}
-          className="inline-flex items-center justify-center rounded-full btn px-6 text-sm font-semibold transition hover:shadow-sm"
-        >
-          （デバッグ）バトルログを取得してconsole表示
-        </button>
-      </Card>
+      {/* デバッグ要素は本番除去 */}
     </div>
   );
 }

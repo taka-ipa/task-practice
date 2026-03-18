@@ -9,6 +9,9 @@
   --ink-foreground: #ffffff;
   --ink-100: #e9eefb;
 
+  --info: #38bdf8;
+  --info-foreground: #ffffff;
+
   --salmon: #ff6b6b; /* サーモンピンク（アクセント） */
   --salmon-foreground: #ffffff;
   --salmon-100: #fff0f0;
@@ -104,8 +107,12 @@ body {
   background: #ffffff;
   color: var(--foreground);
   border: 1px solid var(--border);
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.875rem;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  text-shadow: 0 0.6px 0 rgba(0, 0, 0, 0.25);
+  -webkit-text-stroke: 0.18px rgba(0, 0, 0, 0.10);
   transition: transform var(--motion-duration) ease, box-shadow var(--motion-duration) ease, filter var(--motion-duration) ease;
 }
 
@@ -113,6 +120,10 @@ body {
   background: var(--ink);
   color: var(--ink-foreground);
   border: 1px solid transparent;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  text-shadow: 0 0.6px 0 rgba(0, 0, 0, 0.35);
+  -webkit-text-stroke: 0.2px rgba(0, 0, 0, 0.12);
 }
 
 .btn:hover {
@@ -126,10 +137,14 @@ body {
 
 /* Danger button for destructive actions (filled variant) */
 .btn.btn-danger {
-  /* restore original salmon but slightly translucent */
-  background: rgba(255, 107, 107, 0.9); /* var(--salmon) with slight transparency */
+  /* use solid salmon color for stronger contrast (avoid translucent) */
+  background: var(--salmon);
   color: var(--salmon-foreground);
   border: 1px solid transparent;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  text-shadow: 0 0.6px 0 rgba(0, 0, 0, 0.35);
+  -webkit-text-stroke: 0.2px rgba(0, 0, 0, 0.12);
 }
 .btn.btn-danger:hover {
   filter: brightness(0.95);
@@ -137,25 +152,23 @@ body {
 
 /* Info / accent button (light water-blue) */
 .btn.btn-info {
-  background: rgba(56, 189, 248, 0.6); /* slightly darker translucent sky-400 */
-  color: #d0d2d4; /* darker sky for text */
-  border: 1px solid rgba(56, 189, 248, 0.7);
+  background: var(--info);
+  color: var(--info-foreground);
+  border: 1px solid transparent;
 }
 .btn.btn-info:hover {
-  background: rgba(56, 189, 248, 0.8);
-  filter: none;
+  filter: brightness(0.95);
 }
 
 /* Secondary subtle button */
 .btn.btn-secondary {
-  /* stronger cancel/secondary button for better visibility */
-  background: rgba(255, 255, 255, 0.7);
+  /* use solid background matching surface for predictable contrast */
+  background: var(--background);
   color: var(--foreground);
-  border: 1px solid rgba(255, 255, 255, 0.8);
+  border: 1px solid var(--border);
 }
 .btn.btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.9);
-  filter: none;
+  filter: brightness(0.98);
 }
 
 .badge-ink {

@@ -314,8 +314,8 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="ika training"
-        description="今日の課題を意識してイカした成長をしよう！"
+        title="ikaeri"
+        description="今日の課題を意識してイカした成長をしていこう！"
         right={
           <div className="flex flex-wrap items-center gap-2">
             {status === "ok" ? (

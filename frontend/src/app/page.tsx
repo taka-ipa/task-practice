@@ -5,7 +5,7 @@ export default function HomePage() {
     <main className="min-h-screen bg-slate-950 text-slate-50 flex items-center justify-center">
       <div className="max-w-xl w-full px-6 py-8 rounded-2xl bg-slate-900/80 border border-slate-700 shadow-lg">
         <h1 className="text-2xl font-bold mb-2">
-          課題練習アプリ（仮）
+          ikaeri - 1試合ごとの課題振り返りアプリ
         </h1>
         <p className="text-sm text-slate-300 mb-6">
           1日ごとの振り返りで、課題に○△×をつけていくアプリ。
@@ -28,7 +28,7 @@ export default function HomePage() {
         </div>
 
         <p className="mt-6 text-xs text-slate-400">
-          ※ バックエンド（Laravel）とはまだ未接続です。
+          ※ スマホ版は現在開発中です。
         </p>
       </div>
     </main>
