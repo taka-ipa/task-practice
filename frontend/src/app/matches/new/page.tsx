@@ -486,7 +486,7 @@ export default function NewMatchPage() {
                   className="mt-1"
                 />
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold break-words dark:text-muted-foreground">{t.title}</div>
+                  <div className="font-semibold break-words dark:text-[var(--ink)]">{t.title}</div>
                   {t.description ? (
                     <div className="mt-1 text-sm text-muted-foreground break-words">{t.description}</div>
                   ) : null}
@@ -567,7 +567,7 @@ export default function NewMatchPage() {
             {tasks.filter((t) => selectedTaskIds[t.id]).map((t) => (
               <div key={t.id} className="flex flex-col gap-3 rounded-2xl border bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold break-words">{t.title}</div>
+                  <div className="font-semibold break-words dark:text-[var(--ink)]">{t.title}</div>
                 </div>
 
                 <div className="w-full sm:w-64 flex items-center gap-2 justify-end flex-shrink-0">
