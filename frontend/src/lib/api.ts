@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://3.114.175.93:8000",
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000",
 });
 
 console.log("API BASE URL:", api.defaults.baseURL);
