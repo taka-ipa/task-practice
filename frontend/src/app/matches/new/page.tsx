@@ -353,7 +353,7 @@ export default function NewMatchPage() {
               onChange={(e) =>
                 setForm((p) => ({ ...p, played_at: e.target.value }))
               }
-              className="w-full rounded-full border bg-white px-4 py-2 text-sm"
+              className="w-full rounded-full border bg-white px-4 py-2 text-sm dark:text-[var(--ink)]"
             />
             {getFieldErrors("played_at").length > 0 ? (
               getFieldErrors("played_at").map((_, i) => (
