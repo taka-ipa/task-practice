@@ -25,7 +25,8 @@ class StoreMatchWithRatingsRequest extends FormRequest
 
             'ratings'               => ['required', 'array', 'min:1'],
             'ratings.*.task_id'     => ['required', 'integer'],
-            'ratings.*.rating'      => ['required', 'string', Rule::in(['○', '△', '×'])],
+            // '-'（未評価）も許容する
+            'ratings.*.rating'      => ['required', 'string', Rule::in(['○', '△', '×', '-'])],
         ];
     }
 

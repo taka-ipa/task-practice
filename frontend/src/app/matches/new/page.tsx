@@ -62,6 +62,8 @@ export default function NewMatchPage() {
     stage?: string | null;
     mode?: string | null;
     weapon?: string | null;
+    // 前回保存したときに選択されていた課題IDリスト
+    selected_task_ids?: number[];
   } | null>(null);
   const [errors, setErrors] = useState<ApiValidationErrors>({});
   const [submittedOnce, setSubmittedOnce] = useState(false);
@@ -202,6 +204,10 @@ export default function NewMatchPage() {
         stage: saved.stage ?? null,
         mode: saved.mode ?? null,
         weapon: saved.weapon ?? null,
+        // 選択状態は filteredRatingArray ではなく selectedTaskIds から取得（"-" の評価でも選択は保持したいため）
+        selected_task_ids: Object.entries(selectedTaskIds)
+          .filter(([, v]) => v)
+          .map(([id]) => Number(id)),
       });
 
       // 入力はリセット（次の試合へを押したときにプリセットする）
@@ -218,6 +224,45 @@ export default function NewMatchPage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  // 「ブキと課題を変えずに次へ」ボタンの処理：前回と同じ課題選択を引き継ぎ、評価は空にしてバトル画面へ
+  const gotoNextMatchKeepWeaponAndTasks = () => {
+    if (!lastSavedMatch) return;
+    const now = new Date();
+
+    setForm((p) => ({
+      ...p,
+      played_at: formatDatetimeLocal(now),
+      rule: lastSavedMatch.rule ?? "",
+      stage: lastSavedMatch.stage ?? "",
+      mode: lastSavedMatch.mode ?? "",
+      weapon: lastSavedMatch.weapon ?? "",
+      is_win: true,
+      note: "",
+    }));
+
+    // 評価は空（"-"）にして、前回選択されていた課題だけ選択状態にする
+    const prevSelected = new Set(lastSavedMatch.selected_task_ids ?? []);
+
+    setRatings(() => {
+      const next: Record<number, Rating> = {};
+      for (const t of tasks) {
+        next[t.id] = "-";
+      }
+      return next;
+    });
+
+    setSelectedTaskIds(() => {
+      const m: Record<number, boolean> = {};
+      for (const t of tasks) m[t.id] = prevSelected.has(t.id);
+      return m;
+    });
+
+    // 直接バトル画面へ移動
+    setPhase("battle");
+    // setMessage("前回の武器と課題を引き継ぎました（評価は空です）");
+    setLastSavedMatch(null);
   };
 
   const formatDatetimeLocal = (d: Date) => {
@@ -610,6 +655,13 @@ export default function NewMatchPage() {
 
       {lastSavedMatch && (
         <div className="mt-2">
+            <button
+              type="button"
+              onClick={gotoNextMatchKeepWeaponAndTasks}
+              className="w-full sm:inline-flex items-center justify-center rounded-full btn px-4 py-3 text-sm font-semibold transition hover:shadow-sm mb-2"
+            >
+              そのまま次のバトルへ（ブキと課題を引き継ぐ）
+            </button>
             <button
               type="button"
               onClick={gotoNextMatch}
