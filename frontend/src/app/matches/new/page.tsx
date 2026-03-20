@@ -375,7 +375,7 @@ export default function NewMatchPage() {
                 value={form.rule}
                 onChange={(v) => setForm((p) => ({ ...p, rule: v }))}
                 placeholder="エリア / ヤグラ…"
-                className="w-full"
+                className="w-full dark:text-muted-foreground"
               />
               {getFieldErrors("rule").length > 0 ? (
                 getFieldErrors("rule").map((_, i) => (
@@ -394,7 +394,7 @@ export default function NewMatchPage() {
                 value={form.stage}
                 onChange={(v) => setForm((p) => ({ ...p, stage: v }))}
                 placeholder="マップ名"
-                className="w-full"
+                className="w-full dark:text-muted-foreground"
               />
               {getFieldErrors("stage").length > 0 ? (
                 getFieldErrors("stage").map((_, i) => (
@@ -486,7 +486,7 @@ export default function NewMatchPage() {
                   className="mt-1"
                 />
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold break-words">{t.title}</div>
+                  <div className="font-semibold break-words dark:text-muted-foreground">{t.title}</div>
                   {t.description ? (
                     <div className="mt-1 text-sm text-muted-foreground break-words">{t.description}</div>
                   ) : null}
@@ -547,7 +547,7 @@ export default function NewMatchPage() {
                 value={form.stage}
                 onChange={(v) => setForm((p) => ({ ...p, stage: v }))}
                 placeholder="マップ名"
-                className="w-full"
+                className="w-full dark:text-muted-foreground"
               />
               {getFieldErrors("stage").length > 0 ? (
                 getFieldErrors("stage").map((_, i) => (
