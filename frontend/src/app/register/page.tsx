@@ -10,7 +10,7 @@ export default function RegisterPage() {
 
   // フォームの状態
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
 
@@ -22,7 +22,7 @@ export default function RegisterPage() {
     e.preventDefault();
     setErrorMessage(null);
 
-    if (!name || !email || !password || !passwordConfirmation) {
+    if (!name || !loginId || !password || !passwordConfirmation) {
       setErrorMessage("すべての項目を入力してね。");
       return;
     }
@@ -38,7 +38,7 @@ export default function RegisterPage() {
       // Laravel Breeze の /api/register に投げる想定
       await api.post("/api/register", {
         name,
-        email,
+        login_id: loginId,
         password,
         password_confirmation: passwordConfirmation,
       });
@@ -49,11 +49,41 @@ export default function RegisterPage() {
     } catch (error: any) {
       console.error(error);
 
-      // バリデーションエラーなどをざっくり表示
-      if (error.response?.data?.message) {
-        setErrorMessage(error.response.data.message);
+      // API のバリデーションエラーを日本語化して表示
+      const resp = error.response?.data;
+      if (resp?.errors) {
+        // login_id 用のエラーがあれば優先表示
+        const loginErr = resp.errors.login_id || resp.errors.loginId || null;
+        if (Array.isArray(loginErr) && loginErr.length > 0) {
+          const msg = loginErr[0];
+          if (typeof msg === 'string' && (msg.includes('already been taken') || msg.includes('has already been taken'))) {
+            setErrorMessage('そのユーザーIDは既に使用されています。別のIDを選んでください。');
+          } else {
+            setErrorMessage(String(msg));
+          }
+          return;
+        }
+        // その他フィールドのエラーがあれば先頭を表示
+        const firstField = Object.keys(resp.errors)[0];
+        if (firstField) {
+          const fieldMsg = resp.errors[firstField];
+          if (Array.isArray(fieldMsg) && fieldMsg.length > 0) {
+            setErrorMessage(String(fieldMsg[0]));
+            return;
+          }
+        }
+      }
+
+      if (resp?.message) {
+        // 既定の英語メッセージを日本語へ置換
+        const m: string = String(resp.message);
+        if (m.includes('The login id has already been taken') || m.includes('login id has already been taken')) {
+          setErrorMessage('そのユーザーIDは既に使用されています。別のIDを選んでください。');
+        } else {
+          setErrorMessage(m);
+        }
       } else {
-        setErrorMessage("登録に失敗しました。入力内容を確認してもう一度試してね。");
+        setErrorMessage('登録に失敗しました。入力内容を確認してもう一度試してね。');
       }
     } finally {
       setIsSubmitting(false);
@@ -87,13 +117,13 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-sm mb-1">メールアドレス</label>
+            <label className="block text-sm mb-1">ユーザーID</label>
             <input
-              type="email"
+              type="text"
               className="w-full rounded-lg bg-slate-950/60 border border-slate-600 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoComplete="email"
+              value={loginId}
+              onChange={(e) => setLoginId(e.target.value)}
+              autoComplete="username"
             />
           </div>
 

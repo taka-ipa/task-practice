@@ -485,7 +485,7 @@ export default function NewMatchPage() {
       )}
 
       {/* 課題評価と勝敗入力 */}
-      {phase === "battle" && (
+      {phase === "battle" && !lastSavedMatch && (
         <Card className="p-5">
           <div className="flex items-center justify-between gap-4">
             <h2 className="text-lg font-semibold">課題評価（○△×）</h2>
@@ -584,27 +584,25 @@ export default function NewMatchPage() {
             </div>
           </div>
 
-          {!lastSavedMatch && (
-            <div className="mt-4 flex gap-2">
-              <button
-                type="button"
-                onClick={onSubmit}
-                disabled={saving}
-                className="inline-flex items-center justify-center rounded-full btn btn-primary px-6 text-sm font-semibold transition hover:shadow-sm disabled:opacity-50"
-              >
-                {saving ? "バトルを記録中..." : "バトルを記録"}
-              </button>
+          <div className="mt-4 flex gap-2">
+            <button
+              type="button"
+              onClick={onSubmit}
+              disabled={saving}
+              className="inline-flex items-center justify-center rounded-full btn btn-primary px-6 text-sm font-semibold transition hover:shadow-sm disabled:opacity-50"
+            >
+              {saving ? "バトルを記録中..." : "バトルを記録"}
+            </button>
 
-              <button
-                type="button"
-                onClick={() => setPhase("setup")}
-                disabled={saving}
-                className="inline-flex items-center justify-center rounded-full btn px-6 text-sm font-semibold transition hover:shadow-sm disabled:opacity-50"
-              >
-                戻る（編集）
-              </button>
-            </div>
-          )}
+            <button
+              type="button"
+              onClick={() => setPhase("setup")}
+              disabled={saving}
+              className="inline-flex items-center justify-center rounded-full btn px-6 text-sm font-semibold transition hover:shadow-sm disabled:opacity-50"
+            >
+              戻る（編集）
+            </button>
+          </div>
         </Card>
       )}
 

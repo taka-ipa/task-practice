@@ -8,7 +8,7 @@ type Props = {
 export function ResultBadge({ isWin, className }: Props) {
   if (isWin === null) return null;
 
-  const label = isWin ? "勝ち" : "負け";
+  const label = isWin ? "WIN" : "LOSE";
 
   return (
     <span

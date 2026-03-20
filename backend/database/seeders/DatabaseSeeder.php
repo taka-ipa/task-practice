@@ -15,7 +15,7 @@ class DatabaseSeeder extends Seeder
         // 既存があっても fresh 前提なので気にしない
         $user = User::factory()->create([
             'name' => 'test',
-            'email' => 'test@example.com',
+            'login_id' => 'test',
             'password' => bcrypt('password'),
         ]);
 

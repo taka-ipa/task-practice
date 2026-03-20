@@ -20,7 +20,7 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
-        'email',
+        'login_id',
         'password',
     ];
 
@@ -42,9 +42,18 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
+            // no email verification in login_id flow
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Compatibility for password reset broker: return login_id as the identifier
+     * stored in the password_reset_tokens.email column (we store login_id there).
+     */
+    public function getEmailForPasswordReset(): string
+    {
+        return (string) $this->login_id;
     }
 
     public function tasks()

@@ -12,8 +12,8 @@ export default function LoginPage() {
   const router = useRouter();
 
   // テストしやすい初期値（必要なら空にしてOK）
-  const [email, setEmail] = useState("test_register@example.com");
-  const [password, setPassword] = useState("password123");
+  const [loginId, setLoginId] = useState("");
+  const [password, setPassword] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +26,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await api.post("/api/login", { email, password });
+      const res = await api.post("/api/login", { login_id: loginId, password });
 
       if (typeof window !== "undefined") {
         localStorage.setItem("token", res.data.token);
@@ -36,7 +36,7 @@ export default function LoginPage() {
       router.push("/dashboard");
     } catch (err: unknown) {
       console.error(err);
-      setError("メールアドレスかパスワードが違うか、ログインに失敗しました。");
+      setError("ユーザーIDかパスワードが違うか、ログインに失敗しました。");
     } finally {
       setLoading(false);
     }
@@ -68,16 +68,16 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1">
-              <label className="text-sm font-semibold" htmlFor="email">
-                メールアドレス
+              <label className="text-sm font-semibold" htmlFor="loginId">
+                ユーザーID
               </label>
               <input
-                id="email"
-                type="email"
+                id="loginId"
+                type="text"
                 className="w-full rounded-full border bg-white px-4 py-2 text-sm"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                autoComplete="email"
+                value={loginId}
+                onChange={(e) => setLoginId(e.target.value)}
+                autoComplete="username"
                 required
               />
             </div>

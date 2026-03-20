@@ -14,14 +14,16 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
+            // use login_id (ユーザーID) instead of email for authentication
+            $table->string('login_id')->unique();
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
+            // keep column name `email` to remain compatible with Laravel PasswordBroker
+            // but we will store login_id values here (no actual email stored)
             $table->string('email')->primary();
             $table->string('token');
             $table->timestamp('created_at')->nullable();

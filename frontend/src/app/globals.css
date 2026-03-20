@@ -103,6 +103,16 @@ img, video, svg { max-width: 100%; height: auto; display: block; }
   }
 }
 
+/* Dark mode: make badge-ink use filled ink color for better contrast */
+@media (prefers-color-scheme: dark) {
+  .badge-ink {
+    background: var(--ink) !important;
+    color: var(--ink-foreground) !important;
+    border: 1px solid transparent !important;
+    text-shadow: none !important;
+  }
+}
+
 body {
   background: var(--background);
   color: var(--foreground);

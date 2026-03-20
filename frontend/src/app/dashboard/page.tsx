@@ -12,7 +12,7 @@ import { ResultBadge } from "@/components/ui/ResultBadge";
 type User = {
   id: number;
   name: string;
-  email: string;
+  login_id: string;
 };
 
 type Rating = "○" | "△" | "×" | "-";

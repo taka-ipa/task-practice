@@ -15,13 +15,13 @@ class AuthController extends Controller
     {
         $validated = $request->validate([
             'name'     => ['required', 'string', 'max:255'],
-            'email'    => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+            'login_id' => ['required', 'string', 'max:255', 'unique:users,login_id'],
             'password' => ['required', 'confirmed', Password::min(8)],
         ]);
 
         $user = User::create([
             'name'     => $validated['name'],
-            'email'    => $validated['email'],
+            'login_id' => $validated['login_id'],
             'password' => Hash::make($validated['password']),
         ]);
 
@@ -31,9 +31,9 @@ class AuthController extends Controller
         return response()->json([
             'token' => $token,
             'user'  => [
-                'id'    => $user->id,
-                'name'  => $user->name,
-                'email' => $user->email,
+                'id'       => $user->id,
+                'name'     => $user->name,
+                'login_id' => $user->login_id,
             ],
         ], 201);
     }
@@ -42,17 +42,17 @@ class AuthController extends Controller
     {
         // バリデーション
         $request->validate([
-            'email'    => ['required', 'email'],
+            'login_id' => ['required', 'string'],
             'password' => ['required'],
         ]);
 
-        // メールアドレスでユーザー検索
-        $user = User::where('email', $request->email)->first();
+        // ユーザーIDでユーザー検索
+        $user = User::where('login_id', $request->login_id)->first();
 
         // ユーザーがいない or パスワード不一致ならエラー
         if (! $user || ! Hash::check($request->password, $user->password)) {
             return response()->json([
-                'message' => 'メールアドレスまたはパスワードが正しくありません。',
+                'message' => 'ユーザーIDまたはパスワードが正しくありません。',
             ], 422);
         }
 
@@ -66,9 +66,9 @@ class AuthController extends Controller
         return response()->json([
             'token' => $token,
             'user'  => [
-                'id'    => $user->id,
-                'name'  => $user->name,
-                'email' => $user->email,
+                'id'       => $user->id,
+                'name'     => $user->name,
+                'login_id' => $user->login_id,
             ],
         ]);
     }
@@ -79,9 +79,9 @@ class AuthController extends Controller
         $user = $request->user(); // ← トークンから自動で取得される
 
         return response()->json([
-            'id'    => $user->id,
-            'name'  => $user->name,
-            'email' => $user->email,
+            'id'       => $user->id,
+            'name'     => $user->name,
+            'login_id' => $user->login_id,
         ]);
     }
 
