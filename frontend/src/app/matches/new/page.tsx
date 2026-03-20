@@ -375,7 +375,7 @@ export default function NewMatchPage() {
                 value={form.rule}
                 onChange={(v) => setForm((p) => ({ ...p, rule: v }))}
                 placeholder="エリア / ヤグラ…"
-                className="w-full dark:text-muted-foreground"
+                className="w-full dark:text-[var(--ink)]"
               />
               {getFieldErrors("rule").length > 0 ? (
                 getFieldErrors("rule").map((_, i) => (
@@ -394,7 +394,7 @@ export default function NewMatchPage() {
                 value={form.stage}
                 onChange={(v) => setForm((p) => ({ ...p, stage: v }))}
                 placeholder="マップ名"
-                className="w-full dark:text-muted-foreground"
+                className="w-full dark:text-[var(--ink)]"
               />
               {getFieldErrors("stage").length > 0 ? (
                 getFieldErrors("stage").map((_, i) => (
@@ -415,7 +415,7 @@ export default function NewMatchPage() {
                 value={form.mode}
                 onChange={(v) => setForm((p) => ({ ...p, mode: v }))}
                 placeholder="Xマッチ…"
-                className="w-full"
+                className="w-full dark:text-[var(--ink)]"
               />
               {getFieldErrors("mode").length > 0 ? (
                 getFieldErrors("mode").map((_, i) => (
@@ -434,7 +434,7 @@ export default function NewMatchPage() {
                 value={form.weapon}
                 onChange={(v) => setForm((p) => ({ ...p, weapon: v }))}
                 placeholder="スプラマニュ…"
-                className="w-full"
+                className="w-full dark:text-[var(--ink)]"
               />
               {getFieldErrors("weapon").length > 0 ? (
                 getFieldErrors("weapon").map((_, i) => (
@@ -547,7 +547,7 @@ export default function NewMatchPage() {
                 value={form.stage}
                 onChange={(v) => setForm((p) => ({ ...p, stage: v }))}
                 placeholder="マップ名"
-                className="w-full dark:text-muted-foreground"
+                className="w-full dark:text-[var(--ink)]"
               />
               {getFieldErrors("stage").length > 0 ? (
                 getFieldErrors("stage").map((_, i) => (
