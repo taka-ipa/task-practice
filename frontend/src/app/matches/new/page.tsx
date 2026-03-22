@@ -6,7 +6,7 @@ import api from "@/lib/api";
 
 import { PageHeader } from "@/components/common/PageHeader";
 import { Card } from "@/components/ui/Card";
-import { RatingBadge } from "@/components/ui/RatingBadge";
+// RatingBadge removed — using button styles for selected state
 import StageSelector from "@/components/StageSelector";
 import RuleSelector from "@/components/RuleSelector";
 import ModeSelector from "@/components/ModeSelector";
@@ -579,7 +579,7 @@ export default function NewMatchPage() {
                           key={r}
                           type="button"
                           onClick={() => setTaskRating(t.id, r)}
-                          className={`inline-flex h-12 w-12 items-center justify-center rounded-full border text-sm font-semibold transition hover:shadow-sm ${active ? "bg-slate-50" : "bg-white"}`}
+                          className={`inline-flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full border text-lg sm:text-xl font-semibold transition hover:shadow-md ${active ? "bg-[var(--ink)] text-[var(--ink-foreground)] border-transparent shadow" : "bg-white text-[var(--foreground)] dark:text-[var(--ink)]"}`}
                         >
                           {r}
                         </button>
@@ -587,7 +587,6 @@ export default function NewMatchPage() {
                     })}
                   </div>
 
-                  <RatingBadge rating={ratings[t.id] ?? "-"} />
                 </div>
               </div>
             ))}
@@ -599,7 +598,7 @@ export default function NewMatchPage() {
               value={form.note}
               onChange={(e) => setForm((p) => ({ ...p, note: e.target.value }))}
               placeholder="バトルの感想やメモを入力"
-              className="w-full mt-2 min-h-[80px] rounded-xl border bg-white px-4 py-2 text-sm"
+              className="w-full mt-2 min-h-[80px] rounded-xl border bg-white px-4 py-2 text-sm placeholder:text-[var(--foreground)] dark:placeholder:text-[var(--ink)]"
             />
             {getFieldErrors("note").length > 0 && (
               getFieldErrors("note").map((_, i) => (

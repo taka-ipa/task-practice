@@ -19,7 +19,7 @@ export function RatingBadge({
   return (
     <span
       className={cn(
-        "badge",
+        "badge badge-lg",
         styles[rating],
         className
       )}

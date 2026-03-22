@@ -5,7 +5,11 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use App\Models\GameMatch;
+use App\Models\MatchRating;
+use App\Models\Task;
 
 class MatchController extends Controller
 {
@@ -114,16 +118,82 @@ class MatchController extends Controller
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
+        // Allow updating match fields and optionally ratings array
         $validated = $request->validate([
-            'note' => ['nullable', 'string', 'max:5000'],
+            'played_at' => ['nullable', 'date'],
+            'mode'      => ['nullable', 'string', 'max:50'],
+            'rule'      => ['nullable', 'string', 'max:50'],
+            'stage'     => ['nullable', 'string', 'max:100'],
+            'weapon'    => ['nullable', 'string', 'max:100'],
+            'is_win'    => ['nullable', 'boolean'],
+            'note'      => ['nullable', 'string', 'max:5000'],
+            'ratings'   => ['nullable', 'array'],
         ]);
 
-        $match->note = $validated['note'] ?? null;
-        $match->save();
+        DB::transaction(function () use ($request, $match, $validated) {
+            // Update match fields
+            $match->played_at = $validated['played_at'] ?? $match->played_at;
+            $match->mode = array_key_exists('mode', $validated) ? $validated['mode'] : $match->mode;
+            $match->rule = array_key_exists('rule', $validated) ? $validated['rule'] : $match->rule;
+            $match->stage = array_key_exists('stage', $validated) ? $validated['stage'] : $match->stage;
+            $match->weapon = array_key_exists('weapon', $validated) ? $validated['weapon'] : $match->weapon;
+            $match->is_win = array_key_exists('is_win', $validated) ? $validated['is_win'] : $match->is_win;
+            $match->note = array_key_exists('note', $validated) ? $validated['note'] : $match->note;
+            $match->save();
+
+            // If ratings provided, validate ownership and replace existing ratings
+            if (!empty($validated['ratings'])) {
+                $ratings = $validated['ratings'];
+
+                $taskIds = collect($ratings)->pluck('task_id')->unique()->values();
+
+                $ownedTaskCount = $request->user()->tasks()
+                    ->whereIn('id', $taskIds)
+                    ->count();
+                if ($ownedTaskCount !== $taskIds->count()) {
+                    throw ValidationException::withMessages([
+                        'ratings' => ['ratings に自分の課題ではない task_id が含まれています'],
+                    ]);
+                }
+
+                if ($taskIds->count() !== count($ratings)) {
+                    throw ValidationException::withMessages([
+                        'ratings' => ['ratings に同じ task_id が重複しています'],
+                    ]);
+                }
+
+                // delete existing ratings for this match and insert new ones
+                MatchRating::where('match_id', $match->id)->delete();
+
+                $now = now();
+                $rows = collect($ratings)->map(function ($r) use ($match, $now) {
+                    return [
+                        'match_id'   => $match->id,
+                        'task_id'    => $r['task_id'],
+                        'rating'     => $r['rating'],
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ];
+                })->all();
+
+                MatchRating::insert($rows);
+            }
+        });
+
+        // reload relation
+        $match->load(['ratings.task']);
 
         return response()->json([
             'id' => $match->id,
-            'note' => $match->note,
+            'match' => [
+                'played_at' => $match->played_at,
+                'mode' => $match->mode,
+                'rule' => $match->rule,
+                'stage' => $match->stage,
+                'weapon' => $match->weapon,
+                'is_win' => $match->is_win,
+                'note' => $match->note,
+            ],
         ]);
     }
 }

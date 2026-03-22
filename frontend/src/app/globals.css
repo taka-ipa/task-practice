@@ -84,6 +84,30 @@ img, video, svg { max-width: 100%; height: auto; display: block; }
   }
 }
 
+/* Dark-mode overrides for rating badges: restore colored backgrounds */
+@media (prefers-color-scheme: dark) {
+  .rating-yes {
+    background: var(--ink-100);
+    color: var(--ink);
+    border: 1px solid transparent;
+  }
+  .rating-no {
+    background: var(--salmon-100);
+    color: var(--salmon);
+    border: 1px solid transparent;
+  }
+  .rating-neutral {
+    background: rgba(255,255,255,0.04);
+    color: var(--muted-foreground);
+    border: 1px solid transparent;
+  }
+  .rating-empty {
+    background: rgba(255,255,255,0.02);
+    color: var(--muted-foreground);
+    border: 1px solid transparent;
+  }
+}
+
 /* Remove heavy text-shadow / stroke in dark mode so white text doesn't look embossed */
 @media (prefers-color-scheme: dark) {
   .btn,
@@ -210,21 +234,27 @@ body {
   color: var(--salmon);
 }
 
+/* Rating badges: light-mode defaults (white bg, black text, black border).
+   Dark-mode overrides applied below to show colored backgrounds. */
 .rating-yes {
-  background: var(--ink-100);
-  color: var(--ink);
+  background: #ffffff;
+  color: #000000;
+  border: 1px solid #0b0b0b;
 }
 .rating-no {
-  background: var(--salmon-100);
-  color: var(--salmon);
+  background: #ffffff;
+  color: #000000;
+  border: 1px solid #0b0b0b;
 }
 .rating-neutral {
-  background: #f8fafc;
-  color: var(--muted-foreground);
+  background: #ffffff;
+  color: #000000;
+  border: 1px solid #0b0b0b;
 }
 .rating-empty {
-  background: #f1f5f9;
-  color: #475569;
+  background: #ffffff;
+  color: #000000;
+  border: 1px solid #0b0b0b;
 }
 
 .text-muted-foreground {
@@ -267,6 +297,13 @@ body {
   font-weight: 700;
   line-height: 1;
   transition: box-shadow var(--motion-duration) ease, transform var(--motion-duration) ease, background-color var(--motion-duration) ease;
+}
+
+/* Larger variant for rating badges where more visibility is desirable */
+.badge-lg {
+  height: 2.25rem; /* h-9 */
+  width: 2.25rem; /* w-9 */
+  font-size: 0.95rem;
 }
 
 /* Result badges (pill) */

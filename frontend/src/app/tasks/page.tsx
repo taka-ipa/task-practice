@@ -123,9 +123,20 @@ export default function TasksPage() {
       <div className="max-w-3xl mx-auto space-y-4">
         <header className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">課題一覧</h1>
-          <Link className="text-sm text-slate-300 hover:underline" href="/dashboard">
-            ← dashboard
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/matches/new"
+              className="inline-flex items-center justify-center rounded-md btn btn-primary px-3 py-1 text-sm"
+            >
+              バトル追加
+            </Link>
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center justify-center rounded-md btn px-3 py-1 text-sm"
+              >
+                ホームへ
+              </Link>
+          </div>
         </header>
 
         <form
