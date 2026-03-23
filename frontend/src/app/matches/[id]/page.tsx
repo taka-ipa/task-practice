@@ -133,7 +133,7 @@ export default function MatchDetailPage() {
 
       await api.patch(`/api/matches/${data.match.id}`, payload);
 
-      // refetch detail to reflect saved state
+      // refetch to update
       const fresh = await api.get<MatchDetailRes>(`/api/matches/${id}`);
       setData(fresh.data);
       setMatchDraft(fresh.data.match);
