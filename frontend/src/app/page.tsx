@@ -8,7 +8,7 @@ export default function HomePage() {
           ikaeri - 1試合ごとの課題振り返りアプリ
         </h1>
         <p className="text-sm text-slate-300 mb-6">
-          1日ごとの振り返りで、課題に○△×をつけていくアプリ。
+          1試合ごとの振り返りで、課題に○△×をつけていくアプリ。
           今はまだβ版です。
         </p>
 
