@@ -65,7 +65,7 @@ services:
     restart: unless-stopped
     working_dir: /app
     environment:
-      NEXT_PUBLIC_API_BASE_URL: http://3.114.175.93:8000
+      NEXT_PUBLIC_API_BASE_URL: https://ikaeri.com/api
       NEXT_TELEMETRY_DISABLED: "1"
     ports:
       - "3000:3000"
