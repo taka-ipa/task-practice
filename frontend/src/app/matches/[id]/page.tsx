@@ -344,7 +344,7 @@ export default function MatchDetailPage() {
                   className="text-sm font-semibold underline-offset-4 hover:underline disabled:opacity-50"
                   disabled={savingMatch}
                   onClick={() => {
-                    // cancel: reset drafts from original data
+                    // cancel: reset drafts from original data and close edit mode
                     setMatchDraft(data?.match ?? null);
                     setNoteDraft(data?.match?.note ?? "");
                     const map: Record<number, Rating['rating']> = {};
