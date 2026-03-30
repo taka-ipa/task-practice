@@ -32,7 +32,7 @@ export default function LoginPage() {
         localStorage.setItem("token", res.data.token);
       }
 
-      // ダッシュボードへ（今 "/" がdashboardならそのままでOK）
+      // ダッシュボードへ（今 "/" がdashboardならそのままで OK）
       router.push("/dashboard");
     } catch (err: unknown) {
       console.error(err);
