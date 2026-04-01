@@ -56,6 +56,11 @@ export default function NewMatchPage() {
   const [selectedTaskIds, setSelectedTaskIds] = useState<Record<number, boolean>>({});
 
   const [saving, setSaving] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [newTaskDescription, setNewTaskDescription] = useState("");
+  const [creatingTask, setCreatingTask] = useState(false);
+  const [createTaskError, setCreateTaskError] = useState<string | null>(null);
   const [message, setMessage] = useState<string>("");
   const [lastSavedMatch, setLastSavedMatch] = useState<{
     rule?: string | null;
@@ -174,6 +179,12 @@ export default function NewMatchPage() {
     setSubmittedOnce(false);
     setErrors({});
     setSelectionError("");
+
+    // hide inline create form and clear it
+    setShowCreateForm(false);
+    setNewTaskTitle("");
+    setNewTaskDescription("");
+    setCreateTaskError(null);
   };
 
   const onSubmit = async () => {
@@ -212,6 +223,8 @@ export default function NewMatchPage() {
 
       // 入力はリセット（次の試合へを押したときにプリセットする）
       resetForm();
+
+        // 成功時は特に追加のクリーンアップ不要
     } catch (e: any) {
       console.error(e);
       if (e?.response?.status === 422) {
@@ -263,6 +276,8 @@ export default function NewMatchPage() {
     setPhase("battle");
     // setMessage("前回の武器と課題を引き継ぎました（評価は空です）");
     setLastSavedMatch(null);
+
+    // nothing to cleanup
   };
 
   const formatDatetimeLocal = (d: Date) => {
@@ -304,6 +319,8 @@ export default function NewMatchPage() {
     setPhase("setup");
     setMessage("次のバトルを準備しています");
     setLastSavedMatch(null);
+
+    // nothing to cleanup
   };
 
   const setTaskRating = (taskId: number, rating: Rating) => {
@@ -315,6 +332,8 @@ export default function NewMatchPage() {
     // 何か選択したらエラーをクリア
     setSelectionError("");
   };
+
+  
 
   return (
     <div className="space-y-6">
@@ -461,12 +480,79 @@ export default function NewMatchPage() {
         <div className="flex items-start justify-between">
           <h2 className="text-lg font-semibold">今回の課題を選択</h2>
           <div>
-            <Link
-              href="/tasks"
-              className="inline-flex items-center justify-center rounded-full btn px-3 py-1 text-sm font-semibold"
-            >
-              課題を追加
-            </Link>
+            {showCreateForm ? (
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  setCreateTaskError(null);
+                  if (!newTaskTitle.trim()) return setCreateTaskError("タイトルは必須だよ！");
+                  try {
+                    setCreatingTask(true);
+                    const res = await api.post("/api/tasks", {
+                      title: newTaskTitle.trim(),
+                      description: newTaskDescription.trim() ? newTaskDescription.trim() : null,
+                    });
+                    const created: Task = res.data;
+                    setTasks((prev) => [created, ...prev]);
+                    // ensure rating and selection state include the new task
+                    setRatings((prev) => ({ ...prev, [created.id]: "-" }));
+                    setSelectedTaskIds((prev) => ({ ...prev, [created.id]: false }));
+                    setNewTaskTitle("");
+                    setNewTaskDescription("");
+                    setShowCreateForm(false);
+                  } catch (err: any) {
+                    console.error("POST /api/tasks エラー:", err);
+                    setCreateTaskError(err?.response?.data?.message || "作成に失敗しました");
+                  } finally {
+                    setCreatingTask(false);
+                  }
+                }}
+                className="space-y-2"
+              >
+                <input
+                  value={newTaskTitle}
+                  onChange={(e) => setNewTaskTitle(e.target.value)}
+                  placeholder="課題タイトル（必須）"
+                  className="w-full rounded-full border bg-white px-3 py-2 text-sm"
+                />
+                <textarea
+                  value={newTaskDescription}
+                  onChange={(e) => setNewTaskDescription(e.target.value)}
+                  placeholder="説明（任意）"
+                  className="w-full rounded-md border bg-white px-3 py-2 text-sm min-h-[60px]"
+                />
+                {createTaskError && <p className="text-xs text-rose-400">{createTaskError}</p>}
+                <div className="flex gap-2">
+                  <button
+                    type="submit"
+                    disabled={creatingTask}
+                    className="inline-flex items-center justify-center rounded-full btn btn-primary px-3 py-1 text-sm font-semibold disabled:opacity-50"
+                  >
+                    {creatingTask ? "追加中..." : "追加"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowCreateForm(false);
+                      setNewTaskTitle("");
+                      setNewTaskDescription("");
+                      setCreateTaskError(null);
+                    }}
+                    className="inline-flex items-center justify-center rounded-full btn px-3 py-1 text-sm font-semibold"
+                  >
+                    キャンセル
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowCreateForm(true)}
+                className="inline-flex items-center justify-center rounded-full btn px-3 py-1 text-sm font-semibold"
+              >
+                課題を追加
+              </button>
+            )}
           </div>
         </div>
         <div className="mt-4 space-y-3">
