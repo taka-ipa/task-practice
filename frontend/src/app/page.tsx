@@ -42,7 +42,7 @@ export default function HomePage() {
     return (
       <main className="min-h-screen bg-slate-950 text-slate-50 flex items-center justify-center">
         <div className="max-w-xl w-full px-6 py-8 rounded-2xl bg-slate-900/80 border border-slate-700 shadow-lg text-center">
-          <p className="text-sm text-slate-300">認証状態を確認中...</p>
+          <p className="text-sm text-slate-300">ログイン状態を確認中...</p>
         </div>
       </main>
     );
