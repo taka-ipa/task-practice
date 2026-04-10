@@ -18,7 +18,6 @@ export default function HomePage() {
         if (!mounted) return;
         router.replace("/dashboard");
       } catch (err: unknown) {
-        // 401 は未認証としてトップページを表示
         // それ以外は通信エラーなどの可能性があるので確認しやすくしておく
         console.error("認証チェックエラー:", err);
 
