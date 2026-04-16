@@ -18,7 +18,7 @@ export default function HomePage() {
         if (!mounted) return;
         router.replace("/dashboard");
       } catch (err: unknown) {
-        // それ以外は通信エラーなどの可能性があるので確認しやすくする
+        // それ以外は通信エラーなどの可能性があるので確認しやすく
         console.error("認証チェックエラー:", err);
 
         // 必要なら無効トークンを削除
