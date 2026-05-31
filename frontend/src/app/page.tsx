@@ -56,7 +56,6 @@ export default function HomePage() {
 
         <p className="text-sm text-slate-300 mb-6">
           1試合ごとの振り返りで、課題に○△×をつけていくアプリ。
-          今はまだβ版です。
         </p>
 
         <div className="flex flex-col gap-3">
