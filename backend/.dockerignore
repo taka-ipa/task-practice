@@ -1,0 +1,9 @@
+vendor
+storage/logs
+storage/*.log
+.env
+.git
+.DS_Store
+node_modules
+tests
+phpunit.xml

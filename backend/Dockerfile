@@ -1,14 +1,14 @@
 FROM php:8.2-cli
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     unzip \
     libzip-dev \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
-    default-mysql-client \
   && docker-php-ext-install pdo_mysql zip \
+  && apt-get purge -y --auto-remove git unzip libzip-dev libpng-dev libonig-dev libxml2-dev \
   && rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -17,7 +17,11 @@ WORKDIR /var/www/html
 
 COPY . /var/www/html
 
-RUN composer install --no-interaction --prefer-dist --optimize-autoloader
+RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader \
+  && rm -rf /root/.composer/cache /tmp/* /var/lib/apt/lists/* \
+  && chown -R www-data:www-data /var/www/html
+
+USER www-data
 
 EXPOSE 8000
 

@@ -12,6 +12,9 @@ services:
       --default-authentication-plugin=mysql_native_password
       --character-set-server=utf8mb4
       --collation-server=utf8mb4_0900_ai_ci
+      --skip-log-bin
+      --general-log=0
+      --slow-query-log=0
     volumes:
       - db_data:/var/lib/mysql
     healthcheck:
@@ -19,6 +22,11 @@ services:
       interval: 5s
       timeout: 3s
       retries: 30
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   backend:
     build:
@@ -33,6 +41,10 @@ services:
     environment:
       APP_ENV: production
       APP_DEBUG: "false"
+      LOG_CHANNEL: daily
+      LOG_LEVEL: warning
+      LOG_DAILY_DAYS: 7
+      FILESYSTEM_DISK: local
       DB_CONNECTION: mysql
       DB_HOST: db
       DB_PORT: 3306
@@ -53,6 +65,11 @@ services:
           php artisan config:clear || true
           php artisan migrate --force
           php -S 0.0.0.0:8000 -t public public/index.php
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   frontend:
     build:
@@ -66,6 +83,11 @@ services:
       NEXT_TELEMETRY_DISABLED: "1"
     expose:
       - "3000"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   nginx:
     image: nginx:stable-alpine
@@ -80,6 +102,11 @@ services:
     volumes:
       - ./infra/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   db_data:
