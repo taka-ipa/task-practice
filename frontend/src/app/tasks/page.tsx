@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import Link from "next/link";
 
+import { PageHeader } from "@/components/common/PageHeader";
+import { Card } from "@/components/ui/Card";
+
 type ApiTask = {
   id: number;
   title: string; // API will return title after migration
@@ -119,109 +122,119 @@ export default function TasksPage() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-50 p-6">
-      <div className="max-w-3xl mx-auto space-y-4">
-        <header className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">課題一覧</h1>
-          <div className="flex items-center gap-4">
+    <div className="space-y-6">
+      <PageHeader
+        title="課題一覧"
+        description="今回のバトルで意識する課題を作成・編集できます"
+        right={
+          <div className="flex items-center gap-2">
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center justify-center rounded-full btn px-4 text-sm font-semibold transition hover:shadow-sm"
+            >
+              ホームへ
+            </Link>
             <Link
               href="/matches/new"
-              className="inline-flex items-center justify-center rounded-md btn btn-primary px-3 py-1 text-sm"
+              className="inline-flex items-center justify-center rounded-full btn btn-primary px-4 text-sm font-semibold transition hover:shadow-sm"
             >
-              バトル追加
+              ＋ バトル追加
             </Link>
-              <Link
-                href="/dashboard"
-                className="inline-flex items-center justify-center rounded-md btn px-3 py-1 text-sm"
-              >
-                ホームへ
-              </Link>
           </div>
-        </header>
+        }
+      />
 
-        <form
-          onSubmit={handleCreate}
-          className="rounded-xl bg-slate-900/80 border border-slate-700 p-4 space-y-3"
-        >
-          <div>
-            <label className="text-xs text-slate-400">課題タイトル（必須）</label>
+      <Card className="p-5">
+        <h2 className="text-lg font-semibold">課題を追加</h2>
+
+        <form onSubmit={handleCreate} className="mt-4 space-y-4">
+          <div className="space-y-1">
+            <label className="text-sm font-semibold">課題タイトル（必須）</label>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="mt-1 w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm"
+              className="w-full rounded-full border bg-white px-4 py-2 text-sm dark:text-[var(--ink)]"
               placeholder="例：初弾精度"
             />
           </div>
 
-          <div>
-            <label className="text-xs text-slate-400">説明（任意）</label>
+          <div className="space-y-1">
+            <label className="text-sm font-semibold">説明（任意）</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="mt-1 w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm min-h-[80px]"
+              className="w-full min-h-[80px] rounded-xl border bg-white px-4 py-2 text-sm dark:text-[var(--ink)]"
               placeholder="例：最初の1発を丁寧に当てる"
             />
           </div>
 
-          {formError && <p className="text-xs text-rose-400">{formError}</p>}
+          {formError && !editingId && (
+            <p className="text-xs text-red-600 break-words whitespace-normal">{formError}</p>
+          )}
 
           <div className="flex items-center gap-3">
             <button
               type="submit"
               disabled={submitting}
-              className="px-4 py-2 rounded-lg btn btn-primary disabled:opacity-50 text-sm font-medium"
+              className="inline-flex items-center justify-center rounded-full btn btn-primary px-4 text-sm font-semibold transition hover:shadow-sm disabled:opacity-50"
             >
               {submitting ? "追加中..." : "追加"}
             </button>
 
-            <p className="text-xs text-slate-400">
+            <p className="text-sm text-muted-foreground">
               追加したら一覧が更新されるよ
             </p>
           </div>
         </form>
+      </Card>
 
+      <div className="space-y-3">
         {status === "loading" && (
-          <p className="text-slate-400 text-sm">読み込み中...</p>
+          <Card className="p-6">
+            <p className="text-sm text-muted-foreground">読み込み中...</p>
+          </Card>
         )}
 
         {status === "error" && (
-          <p className="text-amber-400 text-sm">課題取得に失敗したかも…</p>
+          <Card className="p-6">
+            <p className="text-sm text-muted-foreground">課題取得に失敗したかも…</p>
+          </Card>
         )}
 
         {status === "ok" && tasks.length === 0 && (
-          <div className="rounded-xl bg-slate-900/80 border border-slate-700 px-4 py-3 text-sm text-slate-400">
-            課題がまだないよ
-          </div>
+          <Card className="p-6">
+            <p className="text-sm text-muted-foreground">課題がまだないよ</p>
+          </Card>
         )}
 
         {tasks.map((t) => (
-          <div
-            key={t.id}
-            className="rounded-xl bg-slate-900/80 border border-slate-700 px-4 py-3"
-          >
+          <Card key={t.id} className="p-5">
             {editingId === t.id ? (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <input
                   value={editTitle}
                   onChange={(e) => setEditTitle(e.target.value)}
-                  className="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm"
+                  className="w-full rounded-full border bg-white px-4 py-2 text-sm dark:text-[var(--ink)]"
                 />
                 <textarea
                   value={editDescription}
                   onChange={(e) => setEditDescription(e.target.value)}
-                  className="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm min-h-[60px]"
+                  className="w-full min-h-[60px] rounded-xl border bg-white px-4 py-2 text-sm dark:text-[var(--ink)]"
                 />
+                {formError && (
+                  <p className="text-xs text-red-600 break-words whitespace-normal">{formError}</p>
+                )}
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleUpdate(t.id)}
                     disabled={submitting}
-                    className="px-3 py-1 rounded-md btn btn-primary text-sm disabled:opacity-50"
+                    className="inline-flex items-center justify-center rounded-full btn btn-primary px-4 text-sm font-semibold transition hover:shadow-sm disabled:opacity-50"
                   >
                     保存
                   </button>
                   <button
                     onClick={cancelEdit}
-                    className="px-3 py-1 rounded-md btn btn-secondary text-sm"
+                    className="inline-flex items-center justify-center rounded-full btn px-4 text-sm font-semibold transition hover:shadow-sm"
                   >
                     キャンセル
                   </button>
@@ -230,30 +243,30 @@ export default function TasksPage() {
             ) : (
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium break-words whitespace-normal">{t.title}</p>
+                  <p className="text-base font-semibold break-words whitespace-normal">{t.title}</p>
                   {t.description && (
-                    <p className="text-xs text-slate-400 mt-1 break-words whitespace-normal">{t.description}</p>
+                    <p className="mt-2 text-sm text-muted-foreground break-words whitespace-normal">{t.description}</p>
                   )}
                 </div>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => startEdit(t)}
-                    className="px-3 py-1 rounded-md btn btn-info text-sm"
+                    className="inline-flex items-center justify-center rounded-full btn btn-info px-3 text-sm font-semibold transition"
                   >
                     編集
                   </button>
                   <button
                     onClick={() => handleDelete(t.id)}
-                    className="px-3 py-1 rounded-md btn btn-danger text-sm"
+                    className="inline-flex items-center justify-center rounded-full btn btn-danger px-3 text-sm font-semibold transition"
                   >
                     削除
                   </button>
                 </div>
               </div>
             )}
-          </div>
+          </Card>
         ))}
       </div>
-    </main>
+    </div>
   );
 }
