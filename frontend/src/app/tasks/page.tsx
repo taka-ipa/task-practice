@@ -6,6 +6,8 @@ import Link from "next/link";
 
 import { PageHeader } from "@/components/common/PageHeader";
 import { Card } from "@/components/ui/Card";
+import { useConfirm } from "@/components/ui/ConfirmDialog";
+import { useToast } from "@/components/ui/Toast";
 
 type ApiTask = {
   id: number;
@@ -24,6 +26,9 @@ export default function TasksPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
+
+  const confirm = useConfirm();
+  const { showToast } = useToast();
 
 
   const fetchTasks = async () => {
@@ -106,13 +111,14 @@ export default function TasksPage() {
   };
 
   const handleDelete = async (taskId: number) => {
-    if (!confirm("課題を削除しますか？ この操作は取り消せません。")) return;
+    const ok = await confirm("課題を削除しますか？ この操作は取り消せません。");
+    if (!ok) return;
     try {
       await api.delete(`/api/tasks/${taskId}`);
       setTasks((prev) => prev.filter((t) => t.id !== taskId));
     } catch (e) {
       console.error("DELETE /api/tasks/:id エラー:", e);
-      alert("削除に失敗しました");
+      showToast("削除に失敗しました");
     }
   };
 

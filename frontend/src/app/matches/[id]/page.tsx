@@ -13,6 +13,7 @@ import StageSelector from "@/components/StageSelector";
 import RuleSelector from "@/components/RuleSelector";
 import ModeSelector from "@/components/ModeSelector";
 import WeaponSelector from "@/components/WeaponSelector";
+import { useToast } from "@/components/ui/Toast";
 
 type Match = {
   id: number;
@@ -71,6 +72,8 @@ export default function MatchDetailPage() {
   const [savingNote, setSavingNote] = useState(false);
   const [savingRatings, setSavingRatings] = useState(false);
 
+  const { showToast } = useToast();
+
   const playedAtText = useMemo(() => {
     if (!data?.match.played_at) return "-";
     return formatPlayedAt(data.match.played_at);
@@ -108,7 +111,7 @@ export default function MatchDetailPage() {
       setData({ ...data, match: { ...data.match, note: res.data.note } });
       setIsEditingNote(false);
     } catch (e) {
-      alert('メモの保存に失敗しました');
+      showToast('メモの保存に失敗しました');
     } finally {
       setSavingNote(false);
     }
@@ -140,7 +143,7 @@ export default function MatchDetailPage() {
       setIsEditingMatch(false);
     } catch (e: any) {
       console.error(e);
-      alert(e?.response?.data?.message || '試合情報の更新に失敗しました');
+      showToast(e?.response?.data?.message || '試合情報の更新に失敗しました');
     } finally {
       setSavingMatch(false);
     }
@@ -163,7 +166,7 @@ export default function MatchDetailPage() {
       setIsEditingRatings(false);
     } catch (e: any) {
       console.error(e);
-      alert(e?.response?.data?.message || '評価の更新に失敗しました');
+      showToast(e?.response?.data?.message || '評価の更新に失敗しました');
     } finally {
       setSavingRatings(false);
     }

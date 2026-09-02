@@ -8,6 +8,8 @@ import Link from "next/link";
 import { PageHeader } from "@/components/common/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { ResultBadge } from "@/components/ui/ResultBadge";
+import { useConfirm } from "@/components/ui/ConfirmDialog";
+import { useToast } from "@/components/ui/Toast";
 
 type User = {
   id: number;
@@ -104,6 +106,9 @@ export default function DashboardPage() {
   // 課題評価（task_id => "○"|"△"|"×"|"-")
   const [ratings, setRatings] = useState<Record<number, Rating>>({});
 
+  const confirm = useConfirm();
+  const { showToast } = useToast();
+
   const setRating = (taskId: number, r: Rating) => {
     setRatings((prev) => ({ ...prev, [taskId]: r }));
     setTasks((prev) =>
@@ -112,13 +117,14 @@ export default function DashboardPage() {
   };
 
   const handleDelete = async (taskId: number) => {
-    if (!confirm("課題を削除しますか？ この操作は取り消せません。")) return;
+    const ok = await confirm("課題を削除しますか？ この操作は取り消せません。");
+    if (!ok) return;
     try {
       await api.delete(`/api/tasks/${taskId}`);
       setTasks((prev) => prev.filter((t) => t.id !== taskId));
     } catch (e) {
       console.error("課題削除エラー:", e);
-      alert("削除に失敗しました");
+      showToast("削除に失敗しました");
     }
   };
 
