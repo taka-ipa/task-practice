@@ -17,6 +17,11 @@ updates:
     open-pull-requests-limit: 5
     cooldown:
       default-days: 3
+    ignore:
+      # 型定義は本番のNodeランタイム(frontend/Dockerfile の node:24)に合わせる。
+      # メジャー更新はNode本体を上げるときに手動で行う
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
     groups:
       # Next.js / React は必ずセットで上げる（片方だけだと不整合になる）
       next-react:
