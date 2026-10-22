@@ -1,0 +1,79 @@
+version: 2
+
+# 本番にデプロイされるのは frontend/ と backend/ のみ。
+# - cooldown: 公開直後のパッケージ（サプライチェーン汚染の疑い）を3日寝かせてから提案する。
+#   セキュリティアップデート（脆弱性アドバイザリ起点）はcooldownの対象外で即時に提案される。
+# - Dockerのベースイメージは緊急パッチが出やすいので毎日確認し、cooldownは付けない。
+
+updates:
+  # ---- frontend (Next.js) ----
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Tokyo"
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 3
+    groups:
+      # Next.js / React は必ずセットで上げる（片方だけだと不整合になる）
+      next-react:
+        patterns:
+          - "next"
+          - "react"
+          - "react-dom"
+          - "eslint-config-next"
+          - "@types/react"
+          - "@types/react-dom"
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  # ---- backend (Laravel) ----
+  - package-ecosystem: "composer"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Tokyo"
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 3
+    groups:
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  # ---- Docker ベースイメージ ----
+  # タグは node:24.22.1-alpine のように正確なバージョンで固定している。
+  # (node:24-alpine のような浮動タグだと、パッチ更新をDependabotが検知できないため)
+  - package-ecosystem: "docker"
+    directory: "/frontend"
+    schedule:
+      interval: "daily"
+      time: "09:00"
+      timezone: "Asia/Tokyo"
+    open-pull-requests-limit: 3
+    ignore:
+      # Node のメジャー更新（偶数=LTS以外への移行など）は手動で判断する
+      - dependency-name: "node"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: "docker"
+    directory: "/backend"
+    schedule:
+      interval: "daily"
+      time: "09:00"
+      timezone: "Asia/Tokyo"
+    open-pull-requests-limit: 3
+    ignore:
+      # PHP 8.4 → 8.5 などのマイナー/メジャー移行は Laravel の対応状況を見て手動で行う
+      - dependency-name: "php"
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
