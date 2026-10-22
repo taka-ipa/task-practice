@@ -21,8 +21,10 @@ class StoreMatchWithRatingsTest extends TestCase
 
         $payload = [
             'played_at' => '2025-12-25T14:30:00',
+            'mode' => 'Xマッチ',
             'rule' => 'エリア',
             'stage' => 'マテガイ放水路',
+            'weapon' => 'スプラシューター',
             'is_win' => true,
             'ratings' => [
                 ['task_id' => $task1->id, 'rating' => '○'],
