@@ -49,6 +49,23 @@ updates:
           - "minor"
           - "patch"
 
+  # ---- GitHub Actions ----
+  # ワークフロー内のアクションはコミットSHA固定。Dependabotが SHA と「# v1.2.3」コメントを一緒に更新する。
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Tokyo"
+    open-pull-requests-limit: 3
+    cooldown:
+      default-days: 3
+    groups:
+      actions:
+        patterns:
+          - "*"
+
   # ---- Docker ベースイメージ ----
   # タグは node:24.22.1-alpine のように正確なバージョンで固定している。
   # (node:24-alpine のような浮動タグだと、パッチ更新をDependabotが検知できないため)
