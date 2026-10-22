@@ -88,6 +88,9 @@ services:
       NEXT_TELEMETRY_DISABLED: "1"
       NODE_OPTIONS: --max-old-space-size=4096
       WATCHPACK_POLLING: "0"
+      # Dockerfile の runner ステージが NODE_ENV=production を焼き込んでいるため、
+      # dev サーバー用に上書き（これがないと devDependencies が入らずTS周りが壊れる）
+      NODE_ENV: development
     ports:
       - "3000:3000"
     command:

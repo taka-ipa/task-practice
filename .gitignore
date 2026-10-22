@@ -23,3 +23,5 @@ cookies.txt
 
 .vscode/
 .idea/
+
+.claude/settings.local.json
