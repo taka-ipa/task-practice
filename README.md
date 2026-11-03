@@ -26,7 +26,7 @@
 - UI コンポーネントは自前（Card / PageHeader / ConfirmDialog / Toast など。clsx + tailwind-merge を使用）
 
 ### バックエンド
-- Laravel 12
+- Laravel 13
 - PHP 8.4
 - Laravel Sanctum（トークン認証）
 - MySQL 8.0
