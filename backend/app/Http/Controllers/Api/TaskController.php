@@ -43,6 +43,31 @@ class TaskController extends Controller
     }
 
     /**
+     * 指定した課題のタイトル・説明を更新する（所有者のみ）
+     */
+    public function update(Request $request, Task $task)
+    {
+        $user = $request->user();
+
+        // 所有者チェック
+        if ($task->user_id !== $user->id) {
+            return response()->json(['message' => 'Not found'], 404);
+        }
+
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+        ]);
+
+        $task->update([
+            'title' => $validated['title'],
+            'description' => $validated['description'] ?? null,
+        ]);
+
+        return response()->json($task);
+    }
+
+    /**
      * 指定した課題を削除する（所有者のみ）
      */
     public function destroy(Request $request, Task $task)
