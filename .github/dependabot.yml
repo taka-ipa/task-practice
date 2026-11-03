@@ -22,6 +22,10 @@ updates:
       # メジャー更新はNode本体を上げるときに手動で行う
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
+      # TypeScript 7 は typescript-eslint(eslint-config-next経由)が未対応でnpm ciが失敗するため除外。
+      # eslint側が対応したら、この除外を外して更新する
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
     groups:
       # Next.js / React は必ずセットで上げる（片方だけだと不整合になる）
       next-react:
